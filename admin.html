@@ -1296,82 +1296,58 @@ async function publishAll() {
 
   logLine('Starting publish…', 'spin');
 
-  // Publish site settings (footer) to index.html and all product pages
   const siteSettings = getSiteSettings();
-  const ALL_FILES = [
-    { name: 'index', file: 'index.html' },
-    ...PRODUCTS.map(p => ({ name: p.name, file: p.file }))
-  ];
-  if (siteSettings && Object.keys(siteSettings).length > 0) {
-    for (const f of ALL_FILES) {
-      logLine(`⟳ Patching footer in ${f.file}…`, 'spin');
-      try {
-        const { sha, content: rawHtml } = await fetchFileContent(token, owner, repo, branch, f.file);
-        let html = rawHtml;
-        html = patchFooter(html, siteSettings);
-        const encoded = btoa(unescape(encodeURIComponent(html)));
-        const body = { message: `Update footer in ${f.file} via admin`, content: encoded, branch };
-        if (sha) body.sha = sha;
-        const rr = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${f.file}`, {
-          method: 'PUT',
-          headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
-        });
-        if (rr.ok) logLine(`✓ ${f.name} footer updated`, 'ok');
-        else { const err = await rr.json(); logLine(`✗ ${f.name}: ${err.message}`, 'err'); }
-      } catch(e) {
-        logLine(`✗ ${f.name}: ${e.message}`, 'err');
-      }
-    }
-  }
-
-  // ── Publish homepage content + carousel pricing to index.html ──
+  const hasFooter = siteSettings && Object.keys(siteSettings).length > 0;
   const hpState = getHomepageState();
   const cpState = getCarouselPricing();
   const hasHpChanges = hpState && Object.keys(hpState).length > 0;
   const hasCpChanges = cpState && Object.keys(cpState).length > 0;
-  if (hasHpChanges || hasCpChanges) {
-    logLine('⟳ Updating index.html content…', 'spin');
+
+  // Helper to PUT a file to GitHub
+  async function putFile(path, sha, html, commitMsg) {
+    const encoded = btoa(unescape(encodeURIComponent(html)));
+    const body = { message: commitMsg, content: encoded, branch };
+    if (sha) body.sha = sha;
+    return fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+      method: 'PUT',
+      headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+  }
+
+  // ── index.html: fetch ONCE, apply ALL patches, PUT ONCE ──
+  if (hasFooter || hasHpChanges || hasCpChanges) {
+    logLine('⟳ Updating index.html…', 'spin');
     try {
       const { sha, content: rawHtml } = await fetchFileContent(token, owner, repo, branch, 'index.html');
       let html = rawHtml;
-      html = patchHomepage(html, hpState);
-      html = patchCarouselPricing(html, cpState);
-      const encoded = btoa(unescape(encodeURIComponent(html)));
-      const body = { message: 'Update index.html content via admin', content: encoded, branch };
-      if (sha) body.sha = sha;
-      const rr = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/index.html`, {
-        method: 'PUT',
-        headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-      if (rr.ok) logLine('✓ index.html content updated', 'ok');
+      if (hasFooter) html = patchFooter(html, siteSettings);
+      if (hasHpChanges) html = patchHomepage(html, hpState);
+      if (hasCpChanges) html = patchCarouselPricing(html, cpState);
+      const rr = await putFile('index.html', sha, html, 'Update index.html via admin');
+      if (rr.ok) logLine('✓ index.html updated', 'ok');
       else { const err = await rr.json(); logLine('✗ index.html: ' + err.message, 'err'); }
     } catch(e) {
       logLine('✗ index.html: ' + e.message, 'err');
     }
   }
 
+  // ── Product pages: fetch ONCE per file, apply footer + product edits, PUT ONCE ──
   for (const prod of PRODUCTS) {
     const s = state[prod.id];
-    if (!s || Object.keys(s).length === 0) {
+    const hasEdits = s && Object.keys(s).length > 0;
+    if (!hasFooter && !hasEdits) {
       logLine(`⏭ ${prod.name} — no changes, skipping`);
       continue;
     }
     logLine(`⟳ Updating ${prod.name}…`, 'spin');
     try {
-      // Get current file SHA
-      const sha = await getFileSHA(token, owner, repo, branch, prod.file);
-      const content = await buildHTML(prod, s);
-      const encoded = btoa(unescape(encodeURIComponent(content)));
-      const body = { message: `Update ${prod.file} via admin panel`, content: encoded, branch };
-      if (sha) body.sha = sha;
-      const r = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${prod.file}`, {
-        method: 'PUT',
-        headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-      if (r.ok) logLine(`✓ ${prod.name} published`, 'ok');
+      const { sha, content: rawHtml } = await fetchFileContent(token, owner, repo, branch, prod.file);
+      let html = rawHtml;
+      if (hasFooter) html = patchFooter(html, siteSettings);
+      if (hasEdits) html = patchProductHTML(html, s);
+      const r = await putFile(prod.file, sha, html, `Update ${prod.file} via admin`);
+      if (r.ok) logLine(`✓ ${prod.name} updated`, 'ok');
       else { const err = await r.json(); logLine(`✗ ${prod.name}: ${err.message}`, 'err'); }
     } catch(e) {
       logLine(`✗ ${prod.name}: ${e.message}`, 'err');
@@ -1519,22 +1495,9 @@ function patchCarouselPricing(html, cp) {
   return html;
 }
 
-// ─── HTML BUILDER ─────────────────────────────────────────────────────────────
-// Fetches the current HTML file from GitHub and patches it with admin edits
-async function buildHTML(prod, s) {
-  const token  = JSON.parse(localStorage.getItem('curbex-gh')).token;
-  const owner  = JSON.parse(localStorage.getItem('curbex-gh')).owner;
-  const repo   = JSON.parse(localStorage.getItem('curbex-gh')).repo;
-  const branch = JSON.parse(localStorage.getItem('curbex-gh')).branch || 'main';
-
-  // Fetch current file content from GitHub
-  const r = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${prod.file}?ref=${branch}`, {
-    headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
-  });
-  if (!r.ok) throw new Error(`Could not fetch ${prod.file}`);
-  const d = await r.json();
-  let html = decodeURIComponent(escape(atob(d.content.replace(/\n/g,''))));
-
+// ─── PRODUCT HTML PATCHER ──────────────────────────────────────────────────────
+// Patches product HTML with admin edits (content already fetched)
+function patchProductHTML(html, s) {
   // Patch title
   if (s.title) html = html.replace(/(<h1 class="product-title">)[^<]*/,`$1${s.title}`);
   if (s.subtitle) html = html.replace(/(<p class="product-subtitle">)[^<]*/,`$1${s.subtitle}`);
