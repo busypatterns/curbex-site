@@ -1271,116 +1271,90 @@ async function testGH() {
   } catch(e) { msg.style.color = 'var(--red)'; msg.textContent = '✗ Network error.'; }
 }
 
-// ─── PUBLISH ─────────────────────────────────────────────────────────────────
+// ─── PUBLISH (Git Data API only — no Contents API) ──────────────────────────
 
-// Core publish function — GET fresh SHA then PUT, never cache anything
-async function publishFile(filename, newContent, token, owner, repo, branch) {
-  console.log(`[publishFile] === ${filename} ===`);
-  console.log(`[publishFile] Content length: ${newContent.length} chars`);
-  console.log(`[publishFile] Content preview (first 500 chars):`, newContent.substring(0, 500));
-
-  // Method 1: try Contents API for SHA (works reliably for files <1MB)
-  let freshSHA = null;
-  const contentsResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filename}?ref=${branch}`, {
-    headers: { 'Authorization': `token ${token}` },
+// Helper: call GitHub API with no caching
+async function ghAPI(url, token, opts = {}) {
+  const res = await fetch(url, {
+    ...opts,
+    headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json', ...(opts.headers || {}) },
     cache: 'no-store'
   });
-  console.log(`[publishFile] Contents API status: ${contentsResp.status}`);
-  if (contentsResp.ok) {
-    const contentsData = await contentsResp.json();
-    freshSHA = contentsData.sha;
-    console.log(`[publishFile] SHA from Contents API: ${freshSHA}`);
-  }
-
-  // Method 2: if Contents API failed or no SHA, use Git Trees API (reliable for any file size)
-  if (!freshSHA) {
-    console.log(`[publishFile] Contents API did not return SHA, trying Git Trees API`);
-    const treeResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}`, {
-      headers: { 'Authorization': `token ${token}` },
-      cache: 'no-store'
-    });
-    if (treeResp.ok) {
-      const treeData = await treeResp.json();
-      const entry = treeData.tree.find(t => t.path === filename);
-      if (entry) {
-        freshSHA = entry.sha;
-        console.log(`[publishFile] SHA from Git Trees API: ${freshSHA}`);
-      }
-    }
-  }
-
-  if (!freshSHA) {
-    throw new Error(`Could not get SHA for ${filename}`);
-  }
-
-  const encoded = btoa(unescape(encodeURIComponent(newContent)));
-  console.log(`[publishFile] Base64 length: ${encoded.length} chars`);
-
-  // PUT to the correct branch with the fresh SHA
-  const putResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filename}`, {
-    method: 'PUT',
-    headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      message: 'Update from admin panel',
-      content: encoded,
-      sha: freshSHA,
-      branch: branch
-    })
-  });
-  const putBody = await putResponse.clone().json();
-  console.log(`[publishFile] PUT status: ${putResponse.status}`);
-  console.log(`[publishFile] PUT response:`, putBody);
-  return putResponse;
+  const json = await res.json();
+  if (!res.ok) throw new Error(`GitHub API ${res.status}: ${json.message || 'unknown error'}`);
+  return json;
 }
 
-// Fetch file content from GitHub (with Blobs API fallback for files >1MB)
+// Publish a single file using the full Git Data API (6 steps)
+async function publishFile(filename, newContent, token, owner, repo, branch) {
+  const base = `https://api.github.com/repos/${owner}/${repo}`;
+  console.log(`[publish] === ${filename} (${newContent.length} chars) ===`);
+
+  // Step 1: Get latest commit on the branch
+  const ref = await ghAPI(`${base}/git/refs/heads/${branch}`, token);
+  const latestCommitSha = ref.object.sha;
+  console.log(`[publish] Step 1 — latest commit: ${latestCommitSha}`);
+
+  // Step 2: Get that commit's tree SHA
+  const commit = await ghAPI(`${base}/git/commits/${latestCommitSha}`, token);
+  const treeSha = commit.tree.sha;
+  console.log(`[publish] Step 2 — tree: ${treeSha}`);
+
+  // Step 3: Create a new blob with the file content
+  const blob = await ghAPI(`${base}/git/blobs`, token, {
+    method: 'POST',
+    body: JSON.stringify({ content: newContent, encoding: 'utf-8' })
+  });
+  const newBlobSha = blob.sha;
+  console.log(`[publish] Step 3 — new blob: ${newBlobSha}`);
+
+  // Step 4: Create a new tree with the updated file
+  const newTree = await ghAPI(`${base}/git/trees`, token, {
+    method: 'POST',
+    body: JSON.stringify({
+      base_tree: treeSha,
+      tree: [{ path: filename, mode: '100644', type: 'blob', sha: newBlobSha }]
+    })
+  });
+  const newTreeSha = newTree.sha;
+  console.log(`[publish] Step 4 — new tree: ${newTreeSha}`);
+
+  // Step 5: Create a new commit
+  const newCommit = await ghAPI(`${base}/git/commits`, token, {
+    method: 'POST',
+    body: JSON.stringify({
+      message: 'Update from admin panel',
+      tree: newTreeSha,
+      parents: [latestCommitSha]
+    })
+  });
+  const newCommitSha = newCommit.sha;
+  console.log(`[publish] Step 5 — new commit: ${newCommitSha}`);
+
+  // Step 6: Update the branch ref to point to the new commit
+  const updated = await ghAPI(`${base}/git/refs/heads/${branch}`, token, {
+    method: 'PATCH',
+    body: JSON.stringify({ sha: newCommitSha })
+  });
+  console.log(`[publish] Step 6 — branch updated to: ${updated.object.sha}`);
+  return updated;
+}
+
+// Fetch file content via Git Data API (Trees + Blobs, no Contents API)
 async function fetchFileContent(token, owner, repo, branch, path) {
-  console.log(`[fetchContent] Fetching ${path}…`);
-  const r = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`, {
-    headers: { 'Authorization': `token ${token}` },
-    cache: 'no-store'
-  });
-  console.log(`[fetchContent] Contents API status: ${r.status}`);
-  if (r.ok) {
-    const d = await r.json();
-    console.log(`[fetchContent] encoding: ${d.encoding}, content length: ${(d.content||'').length}, has sha: ${!!d.sha}`);
-    if (d.content && d.encoding === 'base64') {
-      const html = decodeURIComponent(escape(atob(d.content.replace(/\n/g,''))));
-      console.log(`[fetchContent] ✓ Got ${path} via Contents API (${html.length} chars)`);
-      return html;
-    }
-    if (d.sha) {
-      console.log(`[fetchContent] Large file, using Blobs API with sha ${d.sha}`);
-      const br = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/blobs/${d.sha}`, {
-        headers: { 'Authorization': `token ${token}` },
-        cache: 'no-store'
-      });
-      console.log(`[fetchContent] Blobs API status: ${br.status}`);
-      if (br.ok) {
-        const bd = await br.json();
-        const html = decodeURIComponent(escape(atob(bd.content.replace(/\n/g,''))));
-        console.log(`[fetchContent] ✓ Got ${path} via Blobs API (${html.length} chars)`);
-        return html;
-      }
-    }
-  }
-  console.log(`[fetchContent] Falling back to Git Trees API`);
-  const tr = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}`, {
-    headers: { 'Authorization': `token ${token}` },
-    cache: 'no-store'
-  });
-  if (!tr.ok) throw new Error(`Could not fetch ${path}`);
-  const td = await tr.json();
-  const entry = td.tree.find(t => t.path === path);
+  const base = `https://api.github.com/repos/${owner}/${repo}`;
+  console.log(`[fetch] Fetching ${path}…`);
+
+  // Get tree for the branch
+  const tree = await ghAPI(`${base}/git/trees/${branch}`, token);
+  const entry = tree.tree.find(t => t.path === path);
   if (!entry) throw new Error(`Could not find ${path} in repo`);
-  const br = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/blobs/${entry.sha}`, {
-    headers: { 'Authorization': `token ${token}` },
-    cache: 'no-store'
-  });
-  if (!br.ok) throw new Error(`Could not fetch ${path}`);
-  const bd = await br.json();
-  const html = decodeURIComponent(escape(atob(bd.content.replace(/\n/g,''))));
-  console.log(`[fetchContent] ✓ Got ${path} via Trees+Blobs (${html.length} chars)`);
+  console.log(`[fetch] Found ${path} — blob sha: ${entry.sha}, size: ${entry.size}`);
+
+  // Fetch blob content
+  const blob = await ghAPI(`${base}/git/blobs/${entry.sha}`, token);
+  const html = decodeURIComponent(escape(atob(blob.content.replace(/\n/g,''))));
+  console.log(`[fetch] ✓ Got ${path} (${html.length} chars)`);
   return html;
 }
 
@@ -1446,9 +1420,8 @@ async function publishAll() {
         console.log(`[publishAll] After patchCarouselPricing: ${html.length} chars (changed: ${html.length !== beforePatch})`);
       }
       console.log(`[publishAll] Total content change: ${html.length - originalLength} chars`);
-      const r = await publishFile('index.html', html, token, owner, repo, branch);
-      if (r.ok) logLine('✓ index.html updated', 'ok');
-      else { const err = await r.json(); logLine('✗ index.html: ' + err.message, 'err'); }
+      await publishFile('index.html', html, token, owner, repo, branch);
+      logLine('✓ index.html updated', 'ok');
     } catch(e) {
       console.error('[publishAll] index.html error:', e);
       logLine('✗ index.html: ' + e.message, 'err');
@@ -1470,9 +1443,8 @@ async function publishAll() {
       let html = await fetchFileContent(token, owner, repo, branch, prod.file);
       if (hasFooter) html = patchFooter(html, siteSettings);
       if (hasEdits) html = patchProductHTML(html, s);
-      const r = await publishFile(prod.file, html, token, owner, repo, branch);
-      if (r.ok) logLine(`✓ ${prod.name} updated`, 'ok');
-      else { const err = await r.json(); logLine(`✗ ${prod.name}: ${err.message}`, 'err'); }
+      await publishFile(prod.file, html, token, owner, repo, branch);
+      logLine(`✓ ${prod.name} updated`, 'ok');
     } catch(e) {
       logLine(`✗ ${prod.name}: ${e.message}`, 'err');
     }
