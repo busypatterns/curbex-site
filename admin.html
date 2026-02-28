@@ -4,6 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Curbex Admin</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='16' fill='%23FFA900'/><text x='50' y='72' font-family='sans-serif' font-size='60' font-weight='900' text-anchor='middle' fill='%23111'>C</text></svg>"/>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -225,7 +226,7 @@
     </button>
   </nav>
   <div class="sidebar-foot">
-    <div style="text-align:center;font-size:10px;color:var(--muted);margin-bottom:4px;">v2.1 — Git Data API</div>
+    <div style="text-align:center;font-size:10px;color:var(--muted);margin-bottom:4px;">v2.2 — Images via GitHub</div>
     <button class="pub-btn" id="pubBtn" onclick="publishAll()">↑ Publish Changes</button>
     <button onclick="signOut()" style="width:100%;margin-top:8px;padding:9px;background:none;border:1px solid var(--border);border-radius:var(--r);color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">Sign Out</button>
   </div>
@@ -842,6 +843,97 @@ function buildCarouselPricingPanel() {
   });
 }
 
+// ─── IMAGE UPLOAD HELPERS ──────────────────────────────────────────────────────
+
+// Read a File object as a base64 data URL
+function readFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result);
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsDataURL(file);
+  });
+}
+
+// Upload a base64 data URL as a binary file to GitHub via Git Data API
+async function uploadImageToGitHub(base64DataUrl, destPath) {
+  const gh = JSON.parse(localStorage.getItem('curbex-gh') || '{}');
+  const token = gh.token || '';
+  const owner = gh.owner || '';
+  const repo = gh.repo || '';
+  const branch = gh.branch || 'main';
+  if (!token || !owner || !repo) throw new Error('GitHub not configured — go to Settings');
+
+  // Strip the data:image/...;base64, prefix
+  const raw = base64DataUrl.replace(/^data:[^;]+;base64,/, '');
+  const base = `https://api.github.com/repos/${owner}/${repo}`;
+
+  // Step 1: Get latest commit
+  const ref = await ghAPI(`${base}/git/refs/heads/${branch}`, token);
+  const latestCommitSha = ref.object.sha;
+
+  // Step 2: Get tree SHA
+  const commit = await ghAPI(`${base}/git/commits/${latestCommitSha}`, token);
+  const treeSha = commit.tree.sha;
+
+  // Step 3: Create blob (already base64)
+  const blob = await ghAPI(`${base}/git/blobs`, token, {
+    method: 'POST',
+    body: JSON.stringify({ content: raw, encoding: 'base64' })
+  });
+
+  // Step 4: Create tree with new file
+  const newTree = await ghAPI(`${base}/git/trees`, token, {
+    method: 'POST',
+    body: JSON.stringify({
+      base_tree: treeSha,
+      tree: [{ path: destPath, mode: '100644', type: 'blob', sha: blob.sha }]
+    })
+  });
+
+  // Step 5: Create commit
+  const newCommit = await ghAPI(`${base}/git/commits`, token, {
+    method: 'POST',
+    body: JSON.stringify({
+      message: `Upload ${destPath} from admin panel`,
+      tree: newTree.sha,
+      parents: [latestCommitSha]
+    })
+  });
+
+  // Step 6: Update branch ref
+  await ghAPI(`${base}/git/refs/heads/${branch}`, token, {
+    method: 'PATCH',
+    body: JSON.stringify({ sha: newCommit.sha })
+  });
+
+  console.log(`[upload] ✓ ${destPath} committed`);
+  return destPath;
+}
+
+// Get a preview URL for an image value (supports both legacy base64 and relative paths)
+function getImagePreviewUrl(storedValue) {
+  if (!storedValue) return '';
+  if (storedValue.startsWith('data:')) return storedValue;
+  // It's a relative path — build a raw GitHub URL for admin preview
+  const gh = JSON.parse(localStorage.getItem('curbex-gh') || '{}');
+  const owner = gh.owner || 'busypatterns';
+  const repo = gh.repo || 'curbex-site';
+  const branch = gh.branch || 'main';
+  return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${storedValue}?t=${Date.now()}`;
+}
+
+// Get file extension from a File object
+function getFileExt(file) {
+  const name = file.name || '';
+  const dot = name.lastIndexOf('.');
+  if (dot >= 0) return name.slice(dot + 1).toLowerCase();
+  const mime = file.type || '';
+  if (mime.includes('png')) return 'png';
+  if (mime.includes('webp')) return 'webp';
+  return 'jpg';
+}
+
 // ─── HOMEPAGE IMAGE UPLOADS ────────────────────────────────────────────────────
 const HP_IMAGE_SLOTS = [
   { id: 'hero',    label: 'Hero Image' },
@@ -863,7 +955,7 @@ function renderHpImages() {
     el.dataset.dropType = 'hp';
     el.dataset.slotId = slot.id;
     if (src) {
-      el.innerHTML = '<img src="' + src + '" alt="" draggable="false"/><div class="img-ov"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span>Replace ' + slot.label + '</span></div>';
+      el.innerHTML = '<img src="' + getImagePreviewUrl(src) + '" alt="" draggable="false"/><div class="img-ov"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span>Replace ' + slot.label + '</span></div>';
     } else {
       el.innerHTML = '<svg class="img-empty-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><div class="img-empty-txt">' + slot.label + '</div>';
     }
@@ -876,15 +968,20 @@ function renderHpImages() {
   });
 }
 
-function handleHpImgFile(slotId, file) {
+async function handleHpImgFile(slotId, file) {
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    updHomepage('img_' + slotId, e.target.result);
+  toast('Uploading…', 'ok');
+  try {
+    const dataUrl = await readFileAsBase64(file);
+    const ext = getFileExt(file);
+    const path = await uploadImageToGitHub(dataUrl, `images/hp-${slotId}.${ext}`);
+    updHomepage('img_' + slotId, path);
     renderHpImages();
-    toast('Photo updated ✓', 'ok');
-  };
-  reader.readAsDataURL(file);
+    toast('Photo uploaded ✓', 'ok');
+  } catch(e) {
+    console.error('[handleHpImgFile]', e);
+    toast('Upload failed: ' + e.message, 'err');
+  }
 }
 
 // ─── CAROUSEL IMAGE UPLOADS ──────────────────────────────────────────────────
@@ -905,7 +1002,7 @@ function buildCarouselPhotosPanel() {
     el.dataset.dropType = 'carousel';
     el.dataset.pid = p.id;
     if (s.image) {
-      el.innerHTML = '<img src="' + s.image + '" alt="" draggable="false"/><div class="img-ov"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span>Replace</span></div>';
+      el.innerHTML = '<img src="' + getImagePreviewUrl(s.image) + '" alt="" draggable="false"/><div class="img-ov"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span>Replace</span></div>';
     } else {
       el.innerHTML = '<svg class="img-empty-icon" viewBox="0 0 24 24" style="width:16px;height:16px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><div class="img-empty-txt" style="font-size:8px">Photo</div>';
     }
@@ -923,15 +1020,20 @@ function buildCarouselPhotosPanel() {
   });
 }
 
-function handleCarouselImgFile(pid, file) {
+async function handleCarouselImgFile(pid, file) {
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    updCarouselPrice(pid, 'image', e.target.result);
+  toast('Uploading…', 'ok');
+  try {
+    const dataUrl = await readFileAsBase64(file);
+    const ext = getFileExt(file);
+    const path = await uploadImageToGitHub(dataUrl, `images/carousel-${pid}.${ext}`);
+    updCarouselPrice(pid, 'image', path);
     buildCarouselPhotosPanel();
-    toast('Carousel photo updated ✓', 'ok');
-  };
-  reader.readAsDataURL(file);
+    toast('Photo uploaded ✓', 'ok');
+  } catch(e) {
+    console.error('[handleCarouselImgFile]', e);
+    toast('Upload failed: ' + e.message, 'err');
+  }
 }
 
 // ─── NAVIGATION ───────────────────────────────────────────────────────────────
@@ -1079,7 +1181,7 @@ function renderImages(pid) {
     slot.dataset.pid = pid;
     slot.dataset.idx = i;
     if (src) {
-      slot.innerHTML = '<img src="' + src + '" alt="" draggable="false"/><div class="img-ov"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span>' + slotLabels[i] + '</span></div>';
+      slot.innerHTML = '<img src="' + getImagePreviewUrl(src) + '" alt="" draggable="false"/><div class="img-ov"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span>' + slotLabels[i] + '</span></div>';
     } else {
       slot.innerHTML = '<svg class="img-empty-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><div class="img-empty-txt">' + slotLabels[i] + '</div>';
     }
@@ -1092,18 +1194,23 @@ function renderImages(pid) {
   });
 }
 
-function handleImgFile(pid, idx, file) {
+async function handleImgFile(pid, idx, file) {
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
+  toast('Uploading…', 'ok');
+  try {
+    const dataUrl = await readFileAsBase64(file);
+    const ext = getFileExt(file);
+    const path = await uploadImageToGitHub(dataUrl, `images/product-${pid}-${idx}.${ext}`);
     if (!state[pid]) state[pid] = {};
     if (!state[pid].images) state[pid].images = ['','','',''];
-    state[pid].images[idx] = e.target.result;
+    state[pid].images[idx] = path;
     saveState();
     renderImages(pid);
-    toast('Photo updated ✓', 'ok');
-  };
-  reader.readAsDataURL(file);
+    toast('Photo uploaded ✓', 'ok');
+  } catch(e) {
+    console.error('[handleImgFile]', e);
+    toast('Upload failed: ' + e.message, 'err');
+  }
 }
 
 // ─── SPECS ────────────────────────────────────────────────────────────────────
