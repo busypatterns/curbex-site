@@ -835,18 +835,19 @@ function renderHpImages() {
     const el = document.createElement('div');
     el.className = 'img-slot' + (src ? ' filled' : '');
     el.style.cssText = 'aspect-ratio:16/9;max-width:400px';
+    el.dataset.dropType = 'hp';
+    el.dataset.slotId = slot.id;
     if (src) {
       el.innerHTML = '<img src="' + src + '" alt="" draggable="false"/><div class="img-ov"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span>Replace ' + slot.label + '</span></div>';
     } else {
       el.innerHTML = '<svg class="img-empty-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><div class="img-empty-txt">' + slot.label + '</div>';
     }
-    // Transparent file input overlay — handles both click and drag-and-drop natively
     const fi = document.createElement('input');
-    fi.type = 'file'; fi.accept = 'image/*';
-    fi.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:10';
+    fi.type = 'file'; fi.accept = 'image/*'; fi.style.display = 'none';
     fi.onchange = () => { if (fi.files[0]) handleHpImgFile(slot.id, fi.files[0]); };
-    el.appendChild(fi);
+    el.onclick = () => fi.click();
     wrap.appendChild(el);
+    wrap.appendChild(fi);
   });
 }
 
@@ -876,18 +877,19 @@ function buildCarouselPhotosPanel() {
     const el = document.createElement('div');
     el.className = 'img-slot' + (s.image ? ' filled' : '');
     el.style.cssText = 'aspect-ratio:1;width:100px;border-radius:8px';
+    el.dataset.dropType = 'carousel';
+    el.dataset.pid = p.id;
     if (s.image) {
       el.innerHTML = '<img src="' + s.image + '" alt="" draggable="false"/><div class="img-ov"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span>Replace</span></div>';
     } else {
       el.innerHTML = '<svg class="img-empty-icon" viewBox="0 0 24 24" style="width:16px;height:16px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><div class="img-empty-txt" style="font-size:8px">Photo</div>';
     }
-    // Transparent file input overlay — handles both click and drag-and-drop natively
     const fi = document.createElement('input');
-    fi.type = 'file'; fi.accept = 'image/*';
-    fi.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:10';
+    fi.type = 'file'; fi.accept = 'image/*'; fi.style.display = 'none';
     fi.onchange = () => { if (fi.files[0]) handleCarouselImgFile(p.id, fi.files[0]); };
-    el.appendChild(fi);
+    el.onclick = () => fi.click();
     slotWrap.appendChild(el);
+    slotWrap.appendChild(fi);
     const label = document.createElement('div');
     label.innerHTML = '<div style="font-size:13px;font-weight:600;color:var(--text)">' + p.name + '</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Click or drag to replace carousel photo</div>';
     row.appendChild(slotWrap);
@@ -1048,18 +1050,20 @@ function renderImages(pid) {
   imgs.forEach((src, i) => {
     const slot = document.createElement('div');
     slot.className = 'img-slot' + (src ? ' filled' : '') + (i===0 ? ' main-slot' : '');
+    slot.dataset.dropType = 'product';
+    slot.dataset.pid = pid;
+    slot.dataset.idx = i;
     if (src) {
       slot.innerHTML = '<img src="' + src + '" alt="" draggable="false"/><div class="img-ov"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span>' + slotLabels[i] + '</span></div>';
     } else {
       slot.innerHTML = '<svg class="img-empty-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><div class="img-empty-txt">' + slotLabels[i] + '</div>';
     }
-    // Transparent file input overlay — handles both click and drag-and-drop natively
     const fi = document.createElement('input');
-    fi.type = 'file'; fi.accept = 'image/*';
-    fi.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:10';
+    fi.type = 'file'; fi.accept = 'image/*'; fi.style.display = 'none';
     fi.onchange = () => { if (fi.files[0]) handleImgFile(pid, i, fi.files[0]); };
-    slot.appendChild(fi);
+    slot.onclick = () => fi.click();
     wrap.appendChild(slot);
+    wrap.appendChild(fi);
   });
 }
 
@@ -1583,6 +1587,34 @@ function toast(msg, type='ok') {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove('on'), 3000);
 }
+
+// ─── GLOBAL DRAG-AND-DROP ────────────────────────────────────────────────────
+// Single delegated handler for ALL image slots — guaranteed to fire
+document.addEventListener('dragover', function(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'copy';
+  var slot = e.target.closest('.img-slot');
+  // Remove highlight from all other slots
+  document.querySelectorAll('.img-slot.drag-over').forEach(function(s) { if (s !== slot) s.classList.remove('drag-over'); });
+  if (slot) slot.classList.add('drag-over');
+});
+document.addEventListener('dragleave', function(e) {
+  if (e.target.classList && e.target.classList.contains('img-slot')) {
+    e.target.classList.remove('drag-over');
+  }
+});
+document.addEventListener('drop', function(e) {
+  e.preventDefault();
+  document.querySelectorAll('.img-slot.drag-over').forEach(function(s) { s.classList.remove('drag-over'); });
+  var slot = e.target.closest('.img-slot');
+  if (!slot) return;
+  var file = e.dataTransfer.files && e.dataTransfer.files[0];
+  if (!file || !file.type.startsWith('image/')) return;
+  var type = slot.dataset.dropType;
+  if (type === 'hp') handleHpImgFile(slot.dataset.slotId, file);
+  else if (type === 'carousel') handleCarouselImgFile(slot.dataset.pid, file);
+  else if (type === 'product') handleImgFile(slot.dataset.pid, parseInt(slot.dataset.idx), file);
+});
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 loadState();
