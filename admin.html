@@ -556,18 +556,24 @@ if (sessionStorage.getItem('curbex-auth') === '1') {
 document.ondragover = function(e) { e.preventDefault(); return false; };
 document.ondrop = function(e) {
   e.preventDefault();
-  var el = e.target;
-  while (el && el !== document) {
-    if (el.classList && el.classList.contains('img-slot')) break;
-    el = el.parentNode;
+  try {
+    var el = e.target;
+    while (el && el !== document) {
+      if (el.classList && el.classList.contains('img-slot')) break;
+      el = el.parentNode;
+    }
+    if (!el || el === document) { toast('Drop missed — not on an image slot', 'err'); return false; }
+    var file = e.dataTransfer.files[0];
+    if (!file) { toast('No file detected in drop', 'err'); return false; }
+    var t = el.getAttribute('data-drop-type');
+    toast('Processing ' + file.name + '…', 'ok');
+    if (t === 'hp') handleHpImgFile(el.getAttribute('data-slot-id'), file);
+    else if (t === 'carousel') handleCarouselImgFile(el.getAttribute('data-pid'), file);
+    else if (t === 'product') handleImgFile(el.getAttribute('data-pid'), parseInt(el.getAttribute('data-idx')), file);
+    else toast('Unknown slot type: ' + t, 'err');
+  } catch(err) {
+    toast('Drop error: ' + err.message, 'err');
   }
-  if (!el || el === document) return false;
-  var file = e.dataTransfer.files[0];
-  if (!file) return false;
-  var t = el.getAttribute('data-drop-type');
-  if (t === 'hp') handleHpImgFile(el.getAttribute('data-slot-id'), file);
-  else if (t === 'carousel') handleCarouselImgFile(el.getAttribute('data-pid'), file);
-  else if (t === 'product') handleImgFile(el.getAttribute('data-pid'), parseInt(el.getAttribute('data-idx')), file);
   return false;
 };
 
