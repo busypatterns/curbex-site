@@ -1607,17 +1607,17 @@ function patchCarouselPricing(html, cp) {
   };
   for (const [pid, cfg] of Object.entries(cp)) {
     const name = nameMap[pid];
-    if (!name || !cfg.price) continue;
+    if (!name) continue;
     // First strip any existing price-label and price lines after this product's desc
-    const stripRe = new RegExp(
-      '(<p class="product-name">' + name + '</p>[\\s\\S]*?<p class="product-desc">[^<]*</p>)' +
-      '(\\s*<p class="product-price-label">[^<]*</p>)?(\\s*<p class="product-price">[^<]*</p>)?' +
-      '(\\s*<(?:a|button))',
-      ''
-    );
-    html = html.replace(stripRe, '$1$4');
-    // Now insert the new price lines before the button/link
     if (cfg.price) {
+      const stripRe = new RegExp(
+        '(<p class="product-name">' + name + '</p>[\\s\\S]*?<p class="product-desc">[^<]*</p>)' +
+        '(\\s*<p class="product-price-label">[^<]*</p>)?(\\s*<p class="product-price">[^<]*</p>)?' +
+        '(\\s*<(?:a|button))',
+        ''
+      );
+      html = html.replace(stripRe, '$1$4');
+      // Insert the new price lines before the button/link
       let inject = '';
       if (cfg.label && cfg.showLabel) {
         inject += '\n            <p class="product-price-label">' + cfg.label + '</p>';
