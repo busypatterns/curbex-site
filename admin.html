@@ -1340,15 +1340,18 @@ async function publishFile(filename, newContent, token, owner, repo, branch) {
   return updated;
 }
 
-// Fetch file content via Git Data API (Trees + Blobs, no Contents API)
+// Fetch file content via Git Data API (Refs → Commits → Trees → Blobs)
 async function fetchFileContent(token, owner, repo, branch, path) {
   const base = `https://api.github.com/repos/${owner}/${repo}`;
   console.log(`[fetch] Fetching ${path}…`);
 
-  // Get tree for the branch
-  const tree = await ghAPI(`${base}/git/trees/${branch}`, token);
+  // Resolve branch → commit → tree SHA
+  const ref = await ghAPI(`${base}/git/refs/heads/${branch}`, token);
+  const commit = await ghAPI(`${base}/git/commits/${ref.object.sha}`, token);
+  const tree = await ghAPI(`${base}/git/trees/${commit.tree.sha}`, token);
+
   const entry = tree.tree.find(t => t.path === path);
-  if (!entry) throw new Error(`Could not find ${path} in repo`);
+  if (!entry) throw new Error(`Could not find ${path} in repo tree (${tree.tree.length} entries, truncated: ${tree.truncated})`);
   console.log(`[fetch] Found ${path} — blob sha: ${entry.sha}, size: ${entry.size}`);
 
   // Fetch blob content
@@ -1450,9 +1453,15 @@ async function publishAll() {
     }
   }
 
-  logLine('Done!', 'ok');
+  logLine('Publish complete.', 'ok');
   dirty = false;
   document.getElementById('unsaved-badge').style.display = 'none';
+
+  // Log summary
+  const filesAttempted = (hasFooter || hasHpChanges || hasCpChanges ? 1 : 0)
+    + PRODUCTS.filter(p => { const s = state[p.id]; return hasFooter || (s && Object.keys(s).length > 0); }).length;
+  console.log(`[publishAll] Finished. Files attempted: ${filesAttempted}`);
+  if (filesAttempted === 0) logLine('⚠ No changes detected — nothing was published.', 'err');
 }
 
 // ─── HOMEPAGE PATCHER ──────────────────────────────────────────────────────────
