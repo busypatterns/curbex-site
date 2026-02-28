@@ -1274,31 +1274,57 @@ async function testGH() {
 // ─── PUBLISH ─────────────────────────────────────────────────────────────────
 
 // Core publish function — GET fresh SHA then PUT, never cache anything
-async function publishFile(filename, newContent, token, owner, repo) {
+async function publishFile(filename, newContent, token, owner, repo, branch) {
   console.log(`[publishFile] === ${filename} ===`);
   console.log(`[publishFile] Content length: ${newContent.length} chars`);
   console.log(`[publishFile] Content preview (first 500 chars):`, newContent.substring(0, 500));
 
-  const getResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filename}`, {
+  // Method 1: try Contents API for SHA (works reliably for files <1MB)
+  let freshSHA = null;
+  const contentsResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filename}?ref=${branch}`, {
     headers: { 'Authorization': `token ${token}` },
     cache: 'no-store'
   });
-  const fileData = await getResponse.json();
-  const freshSHA = fileData.sha;
-  console.log(`[publishFile] GET status: ${getResponse.status}`);
-  console.log(`[publishFile] Fresh SHA: ${freshSHA}`);
+  console.log(`[publishFile] Contents API status: ${contentsResp.status}`);
+  if (contentsResp.ok) {
+    const contentsData = await contentsResp.json();
+    freshSHA = contentsData.sha;
+    console.log(`[publishFile] SHA from Contents API: ${freshSHA}`);
+  }
+
+  // Method 2: if Contents API failed or no SHA, use Git Trees API (reliable for any file size)
+  if (!freshSHA) {
+    console.log(`[publishFile] Contents API did not return SHA, trying Git Trees API`);
+    const treeResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}`, {
+      headers: { 'Authorization': `token ${token}` },
+      cache: 'no-store'
+    });
+    if (treeResp.ok) {
+      const treeData = await treeResp.json();
+      const entry = treeData.tree.find(t => t.path === filename);
+      if (entry) {
+        freshSHA = entry.sha;
+        console.log(`[publishFile] SHA from Git Trees API: ${freshSHA}`);
+      }
+    }
+  }
+
+  if (!freshSHA) {
+    throw new Error(`Could not get SHA for ${filename}`);
+  }
 
   const encoded = btoa(unescape(encodeURIComponent(newContent)));
   console.log(`[publishFile] Base64 length: ${encoded.length} chars`);
-  console.log(`[publishFile] Base64 preview (first 200 chars):`, encoded.substring(0, 200));
 
+  // PUT to the correct branch with the fresh SHA
   const putResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filename}`, {
     method: 'PUT',
     headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       message: 'Update from admin panel',
       content: encoded,
-      sha: freshSHA
+      sha: freshSHA,
+      branch: branch
     })
   });
   const putBody = await putResponse.clone().json();
@@ -1420,7 +1446,7 @@ async function publishAll() {
         console.log(`[publishAll] After patchCarouselPricing: ${html.length} chars (changed: ${html.length !== beforePatch})`);
       }
       console.log(`[publishAll] Total content change: ${html.length - originalLength} chars`);
-      const r = await publishFile('index.html', html, token, owner, repo);
+      const r = await publishFile('index.html', html, token, owner, repo, branch);
       if (r.ok) logLine('✓ index.html updated', 'ok');
       else { const err = await r.json(); logLine('✗ index.html: ' + err.message, 'err'); }
     } catch(e) {
@@ -1444,7 +1470,7 @@ async function publishAll() {
       let html = await fetchFileContent(token, owner, repo, branch, prod.file);
       if (hasFooter) html = patchFooter(html, siteSettings);
       if (hasEdits) html = patchProductHTML(html, s);
-      const r = await publishFile(prod.file, html, token, owner, repo);
+      const r = await publishFile(prod.file, html, token, owner, repo, branch);
       if (r.ok) logLine(`✓ ${prod.name} updated`, 'ok');
       else { const err = await r.json(); logLine(`✗ ${prod.name}: ${err.message}`, 'err'); }
     } catch(e) {
