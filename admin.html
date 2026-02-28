@@ -1,0 +1,1619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Curbex Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0c0c0e; --surf:#16161a; --surf2:#1e1e24; --border:#2a2a32;
+      --accent:#FFA900; --accent-bg:rgba(255,169,0,.1);
+      --text:#ededf0; --muted:#666; --muted2:#999;
+      --green:#22c55e; --red:#ef4444;
+      --r:10px;
+    }
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex}
+
+    /* ── SIDEBAR ── */
+    aside{width:216px;flex-shrink:0;background:var(--surf);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;inset:0 auto 0 0;z-index:20}
+    .logo{padding:22px 18px 18px;border-bottom:1px solid var(--border)}
+    .logo-mark{font-size:17px;font-weight:800;letter-spacing:-.3px;color:var(--text)}
+    .logo-sub{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+    .nav{padding:10px 8px;flex:1;overflow-y:auto}
+    .nav-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;padding:10px 10px 5px}
+    .nav-btn{width:100%;display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:8px;border:none;background:none;color:var(--muted2);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;margin-bottom:1px;text-align:left}
+    .nav-btn:hover{background:var(--surf2);color:var(--text)}
+    .nav-btn.active{background:var(--accent-bg);color:var(--accent)}
+    .nav-btn svg{width:14px;height:14px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:2}
+    .sidebar-foot{padding:14px}
+    .pub-btn{width:100%;padding:11px;background:var(--accent);border:none;border-radius:var(--r);color:#111;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:opacity .15s}
+    .pub-btn:hover{opacity:.88}
+    .pub-btn:disabled{opacity:.4;cursor:not-allowed}
+
+    /* ── MAIN ── */
+    main{margin-left:216px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+    .topbar{height:54px;background:var(--surf);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:10}
+    .topbar-title{font-size:15px;font-weight:700}
+    .topbar-right{display:flex;gap:8px;align-items:center}
+    .unsaved{font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-bg);padding:3px 10px;border-radius:999px;display:none}
+    .preview-link{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;background:var(--surf2);border:1px solid var(--border);border-radius:8px;color:var(--muted2);font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;transition:all .15s}
+    .preview-link:hover{border-color:var(--accent);color:var(--accent)}
+    .preview-link svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2}
+    .body{padding:28px;flex:1}
+
+    /* ── PANELS ── */
+    .panel{display:none}.panel.on{display:block}
+
+    /* ── CARDS ── */
+    .card{background:var(--surf);border:1px solid var(--border);border-radius:14px;margin-bottom:18px;overflow:hidden}
+    .card-head{padding:15px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
+    .card-head-l{display:flex;align-items:center;gap:10px}
+    .card-icon{width:28px;height:28px;border-radius:7px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .card-icon svg{width:13px;height:13px;stroke:var(--accent);fill:none;stroke-width:2}
+    .card-name{font-size:13px;font-weight:700}
+    .card-note{font-size:11px;color:var(--muted);margin-top:1px}
+    .caret svg{width:14px;height:14px;stroke:var(--muted);fill:none;stroke-width:2;transition:transform .2s}
+    .caret.open svg{transform:rotate(180deg)}
+    .card-body{padding:20px}
+    .card-body.shut{display:none}
+
+    /* ── FIELDS ── */
+    .field{margin-bottom:16px}.field:last-child{margin-bottom:0}
+    .fl{display:flex;align-items:center;justify-content:space-between;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:7px}
+    .fl .hint{font-size:11px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;font-family:'DM Mono',monospace}
+    .hint-bad{color:var(--red)!important}
+    input[type=text],textarea,select{width:100%;background:var(--surf2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;padding:9px 13px;outline:none;transition:border-color .15s;resize:vertical}
+    input[type=text]:focus,textarea:focus{border-color:var(--accent)}
+    textarea{min-height:72px;line-height:1.55}
+    .sub{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.5}
+    .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+
+    /* ── IMAGES ── */
+    .img-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+    .img-slot{aspect-ratio:1;border-radius:8px;border:2px dashed var(--border);position:relative;overflow:hidden;cursor:pointer;background:var(--surf2);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:border-color .15s}
+    .img-slot:hover,.img-slot.drag-over{border-color:var(--accent);border-style:solid}
+    .img-slot.filled{border-style:solid;border-color:var(--border)}
+    .img-slot img{width:100%;height:100%;object-fit:cover;display:block}
+    .img-ov{position:absolute;inset:0;background:rgba(0,0,0,.65);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;opacity:0;transition:opacity .15s}
+    .img-slot:hover .img-ov{opacity:1}
+    .img-ov svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2}
+    .img-ov span{font-size:10px;color:#fff;font-weight:700}
+    .img-slot.main-slot::after{content:'HERO';position:absolute;top:5px;left:5px;background:var(--accent);color:#111;font-size:8px;font-weight:800;padding:2px 5px;border-radius:4px;letter-spacing:.05em}
+    .img-empty-icon{stroke:var(--muted);width:20px;height:20px;fill:none;stroke-width:1.5}
+    .img-empty-txt{font-size:10px;color:var(--muted);margin-top:5px;font-weight:600}
+    input[type=file]{display:none}
+    .img-help{font-size:11px;color:var(--muted);line-height:1.6}
+
+    /* ── SPECS ── */
+    .spec-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+
+    /* ── TAGS ── */
+    .tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+    .tag{display:inline-flex;align-items:center;gap:5px;background:var(--surf2);border:1px solid var(--border);border-radius:6px;padding:4px 9px;font-size:12px;font-weight:600}
+    .tag-x{cursor:pointer;color:var(--muted);line-height:1;padding:0 1px}
+    .tag-x:hover{color:var(--red)}
+    .tag-add{display:flex;gap:8px}
+    .tag-add input{flex:1}
+
+    /* ── FAQ ── */
+    .faq-item{background:var(--surf2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:8px}
+    .faq-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+    .faq-num{font-size:11px;font-weight:700;color:var(--muted)}
+    .faq-del{background:none;border:none;cursor:pointer;color:var(--muted);display:flex;align-items:center;padding:2px}
+    .faq-del:hover{color:var(--red)}
+    .faq-del svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
+
+    /* ── BUTTONS ── */
+    .btn{padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:var(--surf2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+    .btn:hover{border-color:var(--accent);color:var(--accent)}
+    .btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
+
+    /* ── SETTINGS ── */
+    .info-box{background:var(--surf2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:16px}
+    .info-box strong{color:var(--text)}
+    .code{font-family:'DM Mono',monospace;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px 12px;font-size:12px;color:#8af;line-height:1.7;margin:10px 0}
+
+    /* ── TOAST ── */
+    .toast{position:fixed;bottom:22px;right:22px;background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:12px 18px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:9px;transform:translateY(60px);opacity:0;transition:all .28s;z-index:999;box-shadow:0 6px 24px rgba(0,0,0,.5)}
+    .toast.on{transform:translateY(0);opacity:1}
+    .toast.ok{border-color:var(--green)}.toast.err{border-color:var(--red)}
+    .toast svg{width:15px;height:15px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:2}
+    .toast.ok svg{stroke:var(--green)}.toast.err svg{stroke:var(--red)}
+
+    /* ── PUBLISH MODAL ── */
+    .overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:50;opacity:0;pointer-events:none;transition:opacity .2s}
+    .overlay.on{opacity:1;pointer-events:all}
+    .modal{background:var(--surf);border:1px solid var(--border);border-radius:16px;padding:26px;width:460px;max-width:90vw}
+    .modal-title{font-size:16px;font-weight:800;margin-bottom:6px}
+    .modal-desc{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:18px}
+    .pub-log{font-family:'DM Mono',monospace;font-size:12px;color:var(--muted2);line-height:2;max-height:180px;overflow-y:auto}
+    .pub-log .ok{color:var(--green)}.pub-log .err{color:var(--red)}.pub-log .spin{color:var(--accent)}
+    .modal-foot{display:flex;justify-content:flex-end;margin-top:18px}
+
+    /* ── DASHBOARD ── */
+    .dash-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
+    .dash-card{background:var(--surf);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:all .15s}
+    .dash-card:hover{border-color:var(--accent);background:var(--surf2)}
+    .dash-em{font-size:26px;margin-bottom:8px}
+    .dash-name{font-size:13px;font-weight:700;margin-bottom:3px}
+    .dash-type{font-size:11px;color:var(--muted)}
+
+    /* ── LOCK SCREEN ── */
+    #lock-screen{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center}
+    #lock-screen.hidden{display:none}
+    .lock-box{text-align:center;width:340px}
+    .lock-icon{width:56px;height:56px;border-radius:14px;background:var(--accent-bg);display:inline-flex;align-items:center;justify-content:center;margin-bottom:20px}
+    .lock-icon svg{width:24px;height:24px;stroke:var(--accent);fill:none;stroke-width:2}
+    .lock-title{font-size:20px;font-weight:800;margin-bottom:6px}
+    .lock-sub{font-size:13px;color:var(--muted);margin-bottom:22px}
+    .lock-input{width:100%;background:var(--surf2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;padding:12px 16px;outline:none;transition:border-color .15s;text-align:center}
+    .lock-input:focus{border-color:var(--accent)}
+    .lock-btn{width:100%;margin-top:12px;padding:12px;background:var(--accent);border:none;border-radius:8px;color:#111;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .15s}
+    .lock-btn:hover{opacity:.88}
+    .lock-err{font-size:12px;color:var(--red);margin-top:10px;min-height:18px}
+  </style>
+</head>
+<body>
+
+<!-- LOCK SCREEN -->
+<div id="lock-screen">
+  <div class="lock-box">
+    <div class="lock-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+    <div class="lock-title">Curbex Admin</div>
+    <div class="lock-sub">Enter the admin password to continue</div>
+    <form onsubmit="return checkPassword(event)">
+      <input type="password" class="lock-input" id="lock-pw" placeholder="Password" autofocus/>
+      <button type="submit" class="lock-btn">Sign In</button>
+    </form>
+    <div class="lock-err" id="lock-err"></div>
+  </div>
+</div>
+
+
+<aside>
+  <div class="logo">
+    <div class="logo-mark">curbex<span style="color:var(--accent)">®</span></div>
+    <div class="logo-sub">Admin Panel</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-label">Overview</div>
+    <button class="nav-btn active" id="nb-dash" onclick="go('dash')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </button>
+    <div class="nav-label">Products</div>
+    <button class="nav-btn" id="nb-mini-b" onclick="go('mini-b')">
+      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="10" rx="2"/></svg>
+      Mini B
+    </button>
+    <button class="nav-btn" id="nb-pedestal" onclick="go('pedestal')">
+      <svg viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="16" rx="2"/><rect x="4" y="18" width="16" height="4" rx="1"/></svg>
+      Pedestal
+    </button>
+    <button class="nav-btn" id="nb-4x4" onclick="go('4x4')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+      4×4
+    </button>
+    <button class="nav-btn" id="nb-ad-panel" onclick="go('ad-panel')">
+      <svg viewBox="0 0 24 24"><rect x="1" y="6" width="22" height="12" rx="2"/></svg>
+      Ad Panel
+    </button>
+    <button class="nav-btn" id="nb-cube-pod" onclick="go('cube-pod')">
+      <svg viewBox="0 0 24 24"><path d="M12 2l9 4.5v9L12 20l-9-4.5v-9z"/></svg>
+      Cube Pod
+    </button>
+    <div class="nav-label">Pages</div>
+    <button class="nav-btn" id="nb-homepage" onclick="go('homepage')">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home Page
+    </button>
+    <button class="nav-btn" id="nb-carousel" onclick="go('carousel')">
+      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="10" rx="2"/><line x1="6" y1="12" x2="6" y2="12"/><line x1="12" y1="12" x2="12" y2="12"/><line x1="18" y1="12" x2="18" y2="12"/></svg>
+      Carousel Pricing
+    </button>
+    <div class="nav-label">Settings</div>
+    <button class="nav-btn" id="nb-site" onclick="go('site')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      Site Settings
+    </button>
+    <button class="nav-btn" id="nb-settings" onclick="go('settings')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      GitHub / Publish
+    </button>
+  </nav>
+  <div class="sidebar-foot">
+    <button class="pub-btn" id="pubBtn" onclick="publishAll()">↑ Publish Changes</button>
+    <button onclick="signOut()" style="width:100%;margin-top:8px;padding:9px;background:none;border:1px solid var(--border);border-radius:var(--r);color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">Sign Out</button>
+  </div>
+</aside>
+
+<main>
+  <div class="topbar">
+    <div class="topbar-title" id="tb-title">Dashboard</div>
+    <div class="topbar-right">
+      <span class="unsaved" id="unsaved-badge">● Unsaved</span>
+      <a class="preview-link" id="preview-a" href="#" target="_blank">
+        <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Preview page
+      </a>
+    </div>
+  </div>
+  <div class="body">
+
+    <!-- DASHBOARD -->
+    <div class="panel on" id="p-dash">
+      <div class="dash-grid">
+        <div class="dash-card" onclick="go('mini-b')"><div class="dash-em">📋</div><div class="dash-name">Mini B</div><div class="dash-type">Portable sign</div></div>
+        <div class="dash-card" onclick="go('pedestal')"><div class="dash-em">🏛️</div><div class="dash-name">Pedestal</div><div class="dash-type">Self-weighted</div></div>
+        <div class="dash-card" onclick="go('4x4')"><div class="dash-em">⬛</div><div class="dash-name">4×4</div><div class="dash-type">Compact sign</div></div>
+        <div class="dash-card" onclick="go('ad-panel')"><div class="dash-em">📢</div><div class="dash-name">Ad Panel</div><div class="dash-type">Pylon sign</div></div>
+        <div class="dash-card" onclick="go('cube-pod')"><div class="dash-em">📦</div><div class="dash-name">Cube Pod</div><div class="dash-type">360° sign</div></div>
+        <div class="dash-card" onclick="go('homepage')" style="border-color:var(--accent)"><div class="dash-em">🏠</div><div class="dash-name">Home Page</div><div class="dash-type">index.html</div></div>
+      </div>
+      <div class="card">
+        <div class="card-head" style="cursor:default">
+          <div class="card-head-l">
+            <div class="card-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+            <div><div class="card-name">Getting started</div></div>
+          </div>
+        </div>
+        <div class="card-body">
+          <p style="font-size:14px;color:var(--muted);line-height:1.75;margin-bottom:10px">Click a product above to edit its <strong style="color:var(--text)">photos, text, specs, and FAQs</strong>. All changes are saved in your browser until you publish.</p>
+          <p style="font-size:14px;color:var(--muted);line-height:1.75;margin-bottom:10px">When ready, click <strong style="color:var(--accent)">↑ Publish Changes</strong> — this pushes the updated HTML files to your GitHub repo and they go live automatically.</p>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- PRODUCT PANELS (built dynamically) -->
+    <div class="panel" id="p-mini-b"></div>
+    <div class="panel" id="p-pedestal"></div>
+    <div class="panel" id="p-4x4"></div>
+    <div class="panel" id="p-ad-panel"></div>
+    <div class="panel" id="p-cube-pod"></div>
+
+    <!-- HOME PAGE -->
+    <div class="panel" id="p-homepage">
+      <div class="card">
+        <div class="card-head" style="cursor:default">
+          <div class="card-head-l">
+            <div class="card-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+            <div><div class="card-name">Hero Section</div><div class="card-note">Main headline and description on the home page</div></div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="field">
+            <div class="fl">Hero Headline</div>
+            <input type="text" id="hp-hero-heading" placeholder="e.g. Rent a Portable Sign in Dallas Fort Worth" oninput="updHomepage('heroHeading',this.value)"/>
+            <div class="sub">→ The large h1 heading at the top of the page. Use &lt;br&gt; for line breaks.</div>
+          </div>
+          <div class="field">
+            <div class="fl">Hero Description</div>
+            <textarea id="hp-hero-desc" placeholder="e.g. A fully managed, end-to-end solution…" oninput="updHomepage('heroDesc',this.value)"></textarea>
+            <div class="sub">→ The paragraph text below the headline</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head" style="cursor:default">
+          <div class="card-head-l">
+            <div class="card-icon"><svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="14" y2="18"/></svg></div>
+            <div><div class="card-name">Section Headings</div><div class="card-note">Headings for the main sections on the page</div></div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="g2">
+            <div class="field">
+              <div class="fl">How It Works — Label</div>
+              <input type="text" id="hp-how-label" placeholder="e.g. How it works" oninput="updHomepage('howLabel',this.value)"/>
+            </div>
+            <div class="field">
+              <div class="fl">How It Works — Heading</div>
+              <input type="text" id="hp-how-heading" placeholder="e.g. End-to-end sign service" oninput="updHomepage('howHeading',this.value)"/>
+            </div>
+          </div>
+          <div class="field">
+            <div class="fl">How It Works — Subtext</div>
+            <input type="text" id="hp-how-subtext" placeholder="e.g. A simple process with a dedicated team behind it." oninput="updHomepage('howSubtext',this.value)"/>
+          </div>
+          <div class="g2">
+            <div class="field">
+              <div class="fl">Pricing — Heading</div>
+              <input type="text" id="hp-pricing-heading" placeholder="e.g. One simple rate" oninput="updHomepage('pricingHeading',this.value)"/>
+            </div>
+            <div class="field">
+              <div class="fl">Use Cases — Heading</div>
+              <input type="text" id="hp-usecases-heading" placeholder="e.g. Built for Dallas Fort Worth businesses" oninput="updHomepage('usecasesHeading',this.value)"/>
+            </div>
+          </div>
+          <div class="g2">
+            <div class="field">
+              <div class="fl">FAQ — Heading</div>
+              <input type="text" id="hp-faq-heading" placeholder="e.g. Common questions" oninput="updHomepage('faqHeading',this.value)"/>
+            </div>
+            <div class="field">
+              <div class="fl">CTA — Heading</div>
+              <input type="text" id="hp-cta-heading" placeholder="e.g. Ready to get noticed in Dallas-Fort Worth?" oninput="updHomepage('ctaHeading',this.value)"/>
+            </div>
+          </div>
+          <div class="field">
+            <div class="fl">Carousel — Section Title</div>
+            <input type="text" id="hp-products-heading" placeholder="e.g. Top 10 Rental Products" oninput="updHomepage('productsHeading',this.value)"/>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head" onclick="toggleCard(this)">
+          <div class="card-head-l">
+            <div class="card-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+            <div><div class="card-name">Page Photos</div><div class="card-note">Drag or click to replace images on the home page</div></div>
+          </div>
+          <div class="caret open"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+        </div>
+        <div class="card-body">
+          <div class="field">
+            <div class="fl">Hero Image <span class="hint">Right side of the hero section</span></div>
+            <div class="img-grid" style="grid-template-columns:1fr" id="hp-img-hero"></div>
+          </div>
+          <div class="field">
+            <div class="fl">How It Works Image <span class="hint">Right side of the "How it works" section</span></div>
+            <div class="img-grid" style="grid-template-columns:1fr" id="hp-img-how"></div>
+          </div>
+          <div class="field">
+            <div class="fl">Pricing Image <span class="hint">Image in the pricing section</span></div>
+            <div class="img-grid" style="grid-template-columns:1fr" id="hp-img-pricing"></div>
+          </div>
+          <div class="field">
+            <div class="fl">Banner Image <span class="hint">Full-width banner background</span></div>
+            <div class="img-grid" style="grid-template-columns:1fr" id="hp-img-banner"></div>
+          </div>
+          <div class="img-help">JPG or PNG recommended. Drag a photo onto any slot or click to upload.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head" style="cursor:default">
+          <div class="card-head-l">
+            <div class="card-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+            <div><div class="card-name">Banner Section</div><div class="card-note">The full-width banner between sections</div></div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="field">
+            <div class="fl">Banner Heading</div>
+            <input type="text" id="hp-banner-heading" placeholder='e.g. Book a Mini B Now' oninput="updHomepage('bannerHeading',this.value)"/>
+            <div class="sub">→ Use &lt;br&gt; for line breaks. This is the heading shown over the banner image.</div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:4px">
+        <button class="btn" style="background:var(--accent);border-color:var(--accent);color:#111;font-weight:700;padding:10px 24px" onclick="toast('Home page settings saved ✓','ok')">
+          Save Home Page
+        </button>
+      </div>
+    </div>
+
+    <!-- CAROUSEL PRICING -->
+    <div class="panel" id="p-carousel">
+      <div class="card">
+        <div class="card-head" style="cursor:default">
+          <div class="card-head-l">
+            <div class="card-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+            <div><div class="card-name">Carousel Product Pricing</div><div class="card-note">Set price and "Per Month" label for each product in the index.html carousel</div></div>
+          </div>
+        </div>
+        <div class="card-body" id="carousel-pricing-body">
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head" onclick="toggleCard(this)">
+          <div class="card-head-l">
+            <div class="card-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+            <div><div class="card-name">Carousel Product Photos</div><div class="card-note">Drag or click to replace product images in the carousel</div></div>
+          </div>
+          <div class="caret open"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+        </div>
+        <div class="card-body" id="carousel-photos-body">
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="panel" id="p-site">
+      <div class="card">
+        <div class="card-head" style="cursor:default">
+          <div class="card-head-l">
+            <div class="card-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+            <div><div class="card-name">Footer — Location &amp; Contact</div><div class="card-note">Applies to index.html and all product pages</div></div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="field">
+            <div class="fl">Service Locations <span style="font-size:11px;color:var(--muted);text-transform:none;letter-spacing:0;font-weight:400">— add one per city / region</span></div>
+            <div id="site-locations-wrap" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
+            <button class="btn" onclick="addLocation()">
+              <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add location
+            </button>
+            <div class="sub" style="margin-top:8px">→ Each entry appears as a line in the "Locations" column of the footer on every page</div>
+          </div>
+          <div class="g2">
+            <div class="field">
+              <div class="fl">Phone</div>
+              <input type="text" id="site-phone" placeholder="e.g. (555) 000-0000" oninput="updSite('phone',this.value)"/>
+            </div>
+            <div class="field">
+              <div class="fl">Email</div>
+              <input type="text" id="site-email" placeholder="e.g. hello@curbex.com" oninput="updSite('email',this.value)"/>
+            </div>
+          </div>
+          <div class="field">
+            <div class="fl">Address</div>
+            <input type="text" id="site-address" placeholder="e.g. Dallas Fort Worth, TX" oninput="updSite('address',this.value)"/>
+            <div class="sub">→ "Phone", "Address", and "Email" appear in the "Contact Us" column of the footer</div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;margin-top:8px">
+            <button class="btn" style="background:var(--accent);border-color:var(--accent);color:#111;font-weight:700;padding:10px 24px" onclick="saveSite()">
+              Save Site Settings
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="p-settings">
+      <div class="card">
+        <div class="card-head" style="cursor:default">
+          <div class="card-head-l">
+            <div class="card-icon"><svg viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg></div>
+            <div><div class="card-name">GitHub Connection</div><div class="card-note">Required to publish changes live</div></div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="info-box">
+            <strong>How to get a token:</strong> Go to GitHub → Settings → Developer Settings → Personal Access Tokens → Tokens (classic) → Generate new token. Give it the <strong>repo</strong> scope. Paste it below.<br/><br/>
+            Your token is stored only in your browser — it never leaves your device.
+          </div>
+          <div class="field">
+            <div class="fl">GitHub Token</div>
+            <input type="text" id="gh-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" oninput="saveGH()"/>
+          </div>
+          <div class="g2">
+            <div class="field">
+              <div class="fl">Repo Owner</div>
+              <input type="text" id="gh-owner" placeholder="busypatterns" oninput="saveGH()"/>
+            </div>
+            <div class="field">
+              <div class="fl">Repo Name</div>
+              <input type="text" id="gh-repo" placeholder="curbex-site" oninput="saveGH()"/>
+            </div>
+          </div>
+          <div class="field">
+            <div class="fl">Branch</div>
+            <input type="text" id="gh-branch" placeholder="main" oninput="saveGH()"/>
+          </div>
+          <button class="btn" onclick="testGH()">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            Test connection
+          </button>
+          <span id="gh-msg" style="font-size:12px;color:var(--muted);margin-left:10px"></span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /body -->
+</main>
+
+<!-- PUBLISH MODAL -->
+<div class="overlay" id="pub-overlay">
+  <div class="modal">
+    <div class="modal-title">Publishing to GitHub…</div>
+    <div class="modal-desc">Pushing updated HTML files to your repo. Pages go live within 60 seconds.</div>
+    <div class="pub-log" id="pub-log"></div>
+    <div class="modal-foot"><button class="btn" onclick="document.getElementById('pub-overlay').classList.remove('on')">Close</button></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" id="toast-icon"></svg>
+  <span id="toast-msg"></span>
+</div>
+
+<script>
+// ── AUTH GATE ──
+const PW_HASH = '566804d07a08578b802a786a281c0c6bc5cd02ac77abefcbdec69541dadbd677';
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function checkPassword(e) {
+  e.preventDefault();
+  const pw = document.getElementById('lock-pw').value;
+  const hash = await sha256(pw);
+  if (hash === PW_HASH) {
+    sessionStorage.setItem('curbex-auth', '1');
+    document.getElementById('lock-screen').classList.add('hidden');
+  } else {
+    document.getElementById('lock-err').textContent = 'Incorrect password';
+    document.getElementById('lock-pw').value = '';
+    document.getElementById('lock-pw').focus();
+  }
+  return false;
+}
+
+if (sessionStorage.getItem('curbex-auth') === '1') {
+  document.getElementById('lock-screen').classList.add('hidden');
+}
+</script>
+<script>
+// ─── PRODUCT CONFIG ───────────────────────────────────────────────────────────
+const PRODUCTS = [
+  { id:'mini-b',    name:'Mini B',    file:'mini-b.html',    preview:'mini-b.html' },
+  { id:'pedestal',  name:'Pedestal',  file:'pedestal.html',  preview:'pedestal.html' },
+  { id:'4x4',       name:'4×4',       file:'4x4.html',       preview:'4x4.html' },
+  { id:'ad-panel',  name:'Ad Panel',  file:'ad-panel.html',  preview:'ad-panel.html' },
+  { id:'cube-pod',  name:'Cube Pod',  file:'cube-pod.html',  preview:'cube-pod.html' },
+];
+
+// ─── CAROUSEL PRODUCTS (all products in index.html carousel) ─────────────────
+const CAROUSEL_PRODUCTS = [
+  { id:'pedestal',     name:'Pedestal' },
+  { id:'mini-b',       name:'Mini B' },
+  { id:'4x4',          name:'4×4' },
+  { id:'ad-panel',     name:'Ad Panel' },
+  { id:'cube-pod',     name:'Cube Pod' },
+  { id:'pedestal-lit', name:'Pedestal Lit' },
+  { id:'4x8',          name:'4×8' },
+];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let state = {}; // keyed by product id
+let dirty = false;
+let currentPanel = 'dash';
+
+// Load saved state from localStorage
+function loadState() {
+  try {
+    const saved = localStorage.getItem('curbex-admin-state');
+    if (saved) state = JSON.parse(saved);
+  } catch(e) {}
+  // Load GH settings
+  const gh = localStorage.getItem('curbex-gh');
+  if (gh) {
+    const d = JSON.parse(gh);
+    document.getElementById('gh-token').value = d.token || '';
+    document.getElementById('gh-owner').value = d.owner || 'busypatterns';
+    document.getElementById('gh-repo').value  = d.repo  || 'curbex-site';
+    document.getElementById('gh-branch').value= d.branch|| 'main';
+  } else {
+    document.getElementById('gh-owner').value = 'busypatterns';
+    document.getElementById('gh-repo').value  = 'curbex-site';
+    document.getElementById('gh-branch').value= 'main';
+  }
+  // Load Site settings
+  const site = localStorage.getItem('curbex-site');
+  if (site) {
+    const d = JSON.parse(site);
+    renderLocations(d.locations || ['']);
+    document.getElementById('site-phone').value    = d.phone    || '';
+    document.getElementById('site-email').value    = d.email    || '';
+    document.getElementById('site-address').value  = d.address  || '';
+  } else {
+    renderLocations(['']);
+  }
+}
+
+function updSite(key, val) {
+  const site = JSON.parse(localStorage.getItem('curbex-site') || '{}');
+  site[key] = val;
+  localStorage.setItem('curbex-site', JSON.stringify(site));
+  dirty = true;
+  document.getElementById('unsaved-badge').style.display = 'inline-flex';
+}
+
+function renderLocations(locs) {
+  const wrap = document.getElementById('site-locations-wrap');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  locs.forEach((loc, i) => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:8px;align-items:center';
+    row.innerHTML = `
+      <input type="text" value="${esc(loc)}" placeholder="e.g. Dallas–Fort Worth" style="flex:1"
+        oninput="updateLocation(${i}, this.value)"/>
+      <button class="btn" style="padding:8px 10px;flex-shrink:0" title="Remove" onclick="removeLocation(${i})">
+        <svg viewBox="0 0 24 24" style="width:13px;height:13px"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+      </button>`;
+    wrap.appendChild(row);
+  });
+}
+
+function getLocations() {
+  const wrap = document.getElementById('site-locations-wrap');
+  if (!wrap) return [];
+  return Array.from(wrap.querySelectorAll('input')).map(i => i.value.trim()).filter(Boolean);
+}
+
+function updateLocation(idx, val) {
+  const site = JSON.parse(localStorage.getItem('curbex-site') || '{}');
+  const locs = site.locations || [''];
+  locs[idx] = val;
+  site.locations = locs;
+  localStorage.setItem('curbex-site', JSON.stringify(site));
+  dirty = true;
+  document.getElementById('unsaved-badge').style.display = 'inline-flex';
+}
+
+function addLocation() {
+  const site = JSON.parse(localStorage.getItem('curbex-site') || '{}');
+  const locs = site.locations || [''];
+  locs.push('');
+  site.locations = locs;
+  localStorage.setItem('curbex-site', JSON.stringify(site));
+  renderLocations(locs);
+  dirty = true;
+  document.getElementById('unsaved-badge').style.display = 'inline-flex';
+}
+
+function removeLocation(idx) {
+  const site = JSON.parse(localStorage.getItem('curbex-site') || '{}');
+  const locs = site.locations || [''];
+  if (locs.length <= 1) { locs[0] = ''; }
+  else { locs.splice(idx, 1); }
+  site.locations = locs;
+  localStorage.setItem('curbex-site', JSON.stringify(site));
+  renderLocations(locs);
+  dirty = true;
+  document.getElementById('unsaved-badge').style.display = 'inline-flex';
+}
+
+function saveSite() {
+  // Persist current location inputs into localStorage
+  const site = JSON.parse(localStorage.getItem('curbex-site') || '{}');
+  site.locations = getLocations();
+  localStorage.setItem('curbex-site', JSON.stringify(site));
+  toast('Site settings saved ✓', 'ok');
+}
+
+function getSiteSettings() {
+  return JSON.parse(localStorage.getItem('curbex-site') || '{}');
+}
+
+function patchFooter(html, s) {
+  // Patch Locations column — supports array of locations
+  const locs = s.locations && s.locations.filter(Boolean);
+  if (locs && locs.length) {
+    // index.html: <div class="footer-links"><p>...</p></div> inside the Locations col
+    html = html.replace(
+      /(<div class="footer-col">\s*<p class="footer-col-title">Locations<\/p>\s*<div class="footer-links">)[\s\S]*?(<\/div>\s*<\/div>)/,
+      (m, open, close) => open + locs.map(l => `<p>${l}</p>`).join('\n        ') + '\n      ' + close
+    );
+    // product page: <h4>Locations</h4> followed by <a> tags
+    html = html.replace(
+      /(<h4>Locations<\/h4>)[\s\S]*?(<\/div>\s*<div class="footer-col">)/,
+      (m, h4, next) => h4 + '\n      ' + locs.map(l => `<a href="#">${l}</a>`).join('\n      ') + '\n    ' + next
+    );
+  }
+  // Patch Contact Us — Phone
+  if (s.phone) {
+    html = html.replace(/(<p>Phone:?\s*(?:<a[^>]*>)?)\[?[^\]<]*\]?(<\/a>)?(<\/p>)/g,
+      `<p>Phone: ${s.phone}$3`);
+  }
+  // Patch Contact Us — Address
+  if (s.address) {
+    html = html.replace(/(<p>Address:?\s*)\[?[^\]<]*\]?(<\/p>)/g,
+      `$1${s.address}$2`);
+  }
+  // Patch Contact Us — Email
+  if (s.email) {
+    html = html.replace(/(<p>Email:?\s*)(?:<a[^>]*>)?(?:<span[^>]*>)?(?:\[email[^\]]*\]|\[email coming soon\]|[^\]<]*)(?:<\/span>)?(?:<\/a>)?(<\/p>)/g,
+      `$1${s.email}$2`);
+  }
+  return html;
+}
+
+function saveState() {
+  localStorage.setItem('curbex-admin-state', JSON.stringify(state));
+  dirty = true;
+  document.getElementById('unsaved-badge').style.display = 'inline-flex';
+}
+
+function saveGH() {
+  localStorage.setItem('curbex-gh', JSON.stringify({
+    token:  document.getElementById('gh-token').value,
+    owner:  document.getElementById('gh-owner').value,
+    repo:   document.getElementById('gh-repo').value,
+    branch: document.getElementById('gh-branch').value,
+  }));
+}
+
+// ─── SIGN OUT ─────────────────────────────────────────────────────────────────
+function signOut() {
+  sessionStorage.removeItem('curbex-auth');
+  document.getElementById('lock-screen').classList.remove('hidden');
+}
+
+// ─── HOMEPAGE STATE ───────────────────────────────────────────────────────────
+function getHomepageState() {
+  return JSON.parse(localStorage.getItem('curbex-homepage') || '{}');
+}
+
+function updHomepage(key, val) {
+  const hp = getHomepageState();
+  hp[key] = val;
+  localStorage.setItem('curbex-homepage', JSON.stringify(hp));
+  dirty = true;
+  document.getElementById('unsaved-badge').style.display = 'inline-flex';
+}
+
+function loadHomepage() {
+  const hp = getHomepageState();
+  const fields = {
+    'hp-hero-heading': 'heroHeading',
+    'hp-hero-desc': 'heroDesc',
+    'hp-how-label': 'howLabel',
+    'hp-how-heading': 'howHeading',
+    'hp-how-subtext': 'howSubtext',
+    'hp-pricing-heading': 'pricingHeading',
+    'hp-usecases-heading': 'usecasesHeading',
+    'hp-faq-heading': 'faqHeading',
+    'hp-cta-heading': 'ctaHeading',
+    'hp-products-heading': 'productsHeading',
+    'hp-banner-heading': 'bannerHeading',
+  };
+  for (const [elId, key] of Object.entries(fields)) {
+    const el = document.getElementById(elId);
+    if (el && hp[key]) {
+      if (el.tagName === 'TEXTAREA') el.value = hp[key];
+      else el.value = hp[key];
+    }
+  }
+}
+
+// ─── CAROUSEL PRICING STATE ──────────────────────────────────────────────────
+function getCarouselPricing() {
+  return JSON.parse(localStorage.getItem('curbex-carousel-pricing') || '{}');
+}
+
+function updCarouselPrice(pid, key, val) {
+  const cp = getCarouselPricing();
+  if (!cp[pid]) cp[pid] = {};
+  cp[pid][key] = val;
+  localStorage.setItem('curbex-carousel-pricing', JSON.stringify(cp));
+  dirty = true;
+  document.getElementById('unsaved-badge').style.display = 'inline-flex';
+}
+
+function buildCarouselPricingPanel() {
+  const wrap = document.getElementById('carousel-pricing-body');
+  if (!wrap) return;
+  const cp = getCarouselPricing();
+  wrap.innerHTML = '';
+  CAROUSEL_PRODUCTS.forEach(p => {
+    const s = cp[p.id] || {};
+    const row = document.createElement('div');
+    row.style.cssText = 'display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)';
+    row.innerHTML = `
+      <div class="field" style="margin:0">
+        <div class="fl">${p.name} — Price</div>
+        <input type="text" value="${s.price || ''}" placeholder="e.g. $209" oninput="updCarouselPrice('${p.id}','price',this.value)"/>
+      </div>
+      <div class="field" style="margin:0">
+        <div class="fl">Price Label</div>
+        <input type="text" value="${s.label || ''}" placeholder="e.g. Per Month" oninput="updCarouselPrice('${p.id}','label',this.value)"/>
+      </div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer;padding-bottom:2px">
+        <input type="checkbox" ${s.showLabel ? 'checked' : ''} onchange="updCarouselPrice('${p.id}','showLabel',this.checked)" style="accent-color:var(--accent)"/>
+        Show label
+      </label>
+    `;
+    wrap.appendChild(row);
+  });
+}
+
+// ─── HOMEPAGE IMAGE UPLOADS ────────────────────────────────────────────────────
+const HP_IMAGE_SLOTS = [
+  { id: 'hero',    label: 'Hero Image' },
+  { id: 'how',     label: 'How It Works Image' },
+  { id: 'pricing', label: 'Pricing Image' },
+  { id: 'banner',  label: 'Banner Image' },
+];
+
+function renderHpImages() {
+  const hp = getHomepageState();
+  HP_IMAGE_SLOTS.forEach(slot => {
+    const wrap = document.getElementById('hp-img-' + slot.id);
+    if (!wrap) return;
+    const src = hp['img_' + slot.id] || '';
+    wrap.innerHTML = '';
+    const el = document.createElement('div');
+    el.className = 'img-slot' + (src ? ' filled' : '');
+    el.style.cssText = 'aspect-ratio:16/9;max-width:400px';
+    el.dataset.slotId = slot.id;
+    if (src) {
+      el.innerHTML = '<img src="' + src + '" alt=""/><div class="img-ov"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span>Replace ' + slot.label + '</span></div>';
+    } else {
+      el.innerHTML = '<svg class="img-empty-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><div class="img-empty-txt">' + slot.label + '</div>';
+    }
+    // hidden file input — create fresh each time, use closure reference
+    const fi = document.createElement('input');
+    fi.type = 'file'; fi.accept = 'image/*';
+    fi.style.display = 'none';
+    fi.onchange = e => handleHpImgFile(slot.id, e.target.files[0]);
+    el.onclick = () => fi.click();
+    wrap.appendChild(el);
+    wrap.appendChild(fi);
+    // drag and drop
+    el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('drag-over'); });
+    el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
+    el.addEventListener('drop', e => {
+      e.preventDefault(); el.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file) handleHpImgFile(slot.id, file);
+    });
+  });
+}
+
+function handleHpImgFile(slotId, file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    updHomepage('img_' + slotId, e.target.result);
+    renderHpImages();
+    toast('Photo updated ✓', 'ok');
+  };
+  reader.readAsDataURL(file);
+}
+
+// ─── CAROUSEL IMAGE UPLOADS ──────────────────────────────────────────────────
+function buildCarouselPhotosPanel() {
+  const wrap = document.getElementById('carousel-photos-body');
+  if (!wrap) return;
+  const cp = getCarouselPricing();
+  wrap.innerHTML = '';
+  CAROUSEL_PRODUCTS.forEach(p => {
+    const s = cp[p.id] || {};
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:14px;align-items:center;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)';
+    const imgWrap = document.createElement('div');
+    imgWrap.style.cssText = 'width:100px;flex-shrink:0';
+    const slot = document.createElement('div');
+    slot.className = 'img-slot' + (s.image ? ' filled' : '');
+    slot.style.cssText = 'aspect-ratio:1;width:100px;border-radius:8px';
+    if (s.image) {
+      slot.innerHTML = '<img src="' + s.image + '" alt=""/><div class="img-ov"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span>Replace</span></div>';
+    } else {
+      slot.innerHTML = '<svg class="img-empty-icon" viewBox="0 0 24 24" style="width:16px;height:16px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><div class="img-empty-txt" style="font-size:8px">Photo</div>';
+    }
+    // File input
+    const fi = document.createElement('input');
+    fi.type = 'file'; fi.accept = 'image/*'; fi.style.display = 'none';
+    fi.onchange = e => handleCarouselImgFile(p.id, e.target.files[0]);
+    slot.onclick = () => fi.click();
+    // Drag and drop
+    slot.addEventListener('dragover', e => { e.preventDefault(); slot.classList.add('drag-over'); });
+    slot.addEventListener('dragleave', () => slot.classList.remove('drag-over'));
+    slot.addEventListener('drop', e => {
+      e.preventDefault(); slot.classList.remove('drag-over');
+      if (e.dataTransfer.files[0]) handleCarouselImgFile(p.id, e.dataTransfer.files[0]);
+    });
+    imgWrap.appendChild(slot);
+    imgWrap.appendChild(fi);
+    const label = document.createElement('div');
+    label.innerHTML = '<div style="font-size:13px;font-weight:600;color:var(--text)">' + p.name + '</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Click or drag to replace carousel photo</div>';
+    row.appendChild(imgWrap);
+    row.appendChild(label);
+    wrap.appendChild(row);
+  });
+}
+
+function handleCarouselImgFile(pid, file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    updCarouselPrice(pid, 'image', e.target.result);
+    buildCarouselPhotosPanel();
+    toast('Carousel photo updated ✓', 'ok');
+  };
+  reader.readAsDataURL(file);
+}
+
+// ─── NAVIGATION ───────────────────────────────────────────────────────────────
+function go(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('p-' + id).classList.add('on');
+  document.getElementById('nb-' + id).classList.add('active');
+  currentPanel = id;
+
+  const titles = {'dash':'Dashboard','settings':'Settings','site':'Site Settings','homepage':'Home Page','carousel':'Carousel Pricing','mini-b':'Mini B','pedestal':'Pedestal','4x4':'4×4','ad-panel':'Ad Panel','cube-pod':'Cube Pod'};
+  document.getElementById('tb-title').textContent = titles[id] || id;
+
+  const prod = PRODUCTS.find(p => p.id === id);
+  const pa = document.getElementById('preview-a');
+  if (prod) { pa.href = prod.preview; pa.style.display='inline-flex'; }
+  else pa.style.display = 'none';
+
+  // Build panel if not yet built
+  if (prod && !document.getElementById('p-'+id).dataset.built) buildPanel(prod);
+  if (id === 'homepage') { loadHomepage(); renderHpImages(); }
+  if (id === 'carousel') { buildCarouselPricingPanel(); buildCarouselPhotosPanel(); }
+}
+
+// ─── BUILD PRODUCT PANEL ──────────────────────────────────────────────────────
+function buildPanel(prod) {
+  const el = document.getElementById('p-' + prod.id);
+  el.dataset.built = '1';
+  const s = state[prod.id] || {};
+
+  el.innerHTML = `
+    <!-- IMAGES -->
+    <div class="card">
+      <div class="card-head" onclick="toggleCard(this)">
+        <div class="card-head-l">
+          <div class="card-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+          <div><div class="card-name">Photos</div><div class="card-note">Click or drag a photo onto any slot to replace it</div></div>
+        </div>
+        <div class="caret open"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+      </div>
+      <div class="card-body">
+        <div class="img-grid" id="imgs-${prod.id}"></div>
+        <div class="img-help">JPG or PNG recommended. Changes are saved automatically when you upload.</div>
+      </div>
+    </div>
+
+    <!-- PRODUCT INFO -->
+    <div class="card">
+      <div class="card-head" onclick="toggleCard(this)">
+        <div class="card-head-l">
+          <div class="card-icon"><svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="14" y2="18"/></svg></div>
+          <div><div class="card-name">Product Info</div><div class="card-note">Title, description, specs, features</div></div>
+        </div>
+        <div class="caret open"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+      </div>
+      <div class="card-body">
+        <div class="g2">
+          <div class="field">
+            <div class="fl">Product Title</div>
+            <input type="text" id="${prod.id}-title" value="${esc(s.title||'')}" oninput="upd('${prod.id}','title',this.value)" placeholder="e.g. Mini B"/>
+            <div class="sub">→ Appears as the large heading at the top of the page (e.g. <em>"Mini B"</em>)</div>
+          </div>
+          <div class="field">
+            <div class="fl">Subtitle</div>
+            <input type="text" id="${prod.id}-subtitle" value="${esc(s.subtitle||'')}" oninput="upd('${prod.id}','subtitle',this.value)" placeholder="e.g. Printed Portable Sign"/>
+            <div class="sub">→ Small text directly below the title (e.g. <em>"Printed Portable Sign"</em>)</div>
+          </div>
+        </div>
+        <div class="field">
+          <div class="fl">Price / Tagline Heading</div>
+          <input type="text" id="${prod.id}-price" value="${esc(s.price||'')}" oninput="upd('${prod.id}','price',this.value)" placeholder="e.g. Affordable Rental Rate — as Low as $10/day"/>
+          <div class="sub">→ Bold headline below the subtitle — used to highlight pricing or a key selling point</div>
+        </div>
+        <div class="field">
+          <div class="fl">Description</div>
+          <textarea id="${prod.id}-desc" oninput="upd('${prod.id}','desc',this.value)" placeholder="Describe this product…">${esc(s.desc||'')}</textarea>
+          <div class="sub">→ Paragraph of body text in the grey box below the product images, describing the sign in detail</div>
+        </div>
+        <div class="field">
+          <div class="fl">Specs <span style="font-size:11px;color:var(--muted);text-transform:none;letter-spacing:0;font-weight:400">(label : value)</span></div>
+          <div id="${prod.id}-specs-wrap"></div>
+          <div class="sub" style="margin-bottom:8px">→ The 3 icon boxes beside the product image — e.g. <em>Sign Height / 5' (h)</em>, <em>Digital Print / Full colour</em></div>
+          <button class="btn" onclick="addSpec('${prod.id}')">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add spec
+          </button>
+        </div>
+        <div class="field">
+          <div class="fl">Feature Tags</div>
+          <div class="tags" id="${prod.id}-tags"></div>
+          <div class="sub" style="margin-bottom:8px">→ Small bullet-point highlights shown below the specs — e.g. <em>Double Sided</em>, <em>Changeable Artwork</em></div>
+          <div class="tag-add">
+            <input type="text" id="${prod.id}-tag-input" placeholder="e.g. Double Sided" onkeydown="if(event.key==='Enter')addTag('${prod.id}')"/>
+            <button class="btn" onclick="addTag('${prod.id}')">Add</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAQs -->
+    <div class="card">
+      <div class="card-head" onclick="toggleCard(this)">
+        <div class="card-head-l">
+          <div class="card-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+          <div><div class="card-name">FAQs</div><div class="card-note">Expandable questions shown in the lower section of the page</div></div>
+        </div>
+        <div class="caret open"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+      </div>
+      <div class="card-body">
+        <div id="${prod.id}-faqs-wrap"></div>
+        <button class="btn" onclick="addFAQ('${prod.id}')">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add FAQ
+        </button>
+      </div>
+    </div>
+
+    <!-- SAVE -->
+    <div style="display:flex;justify-content:flex-end;margin-top:4px">
+      <button class="btn" style="background:var(--accent);border-color:var(--accent);color:#111;font-weight:700;padding:10px 24px" onclick="saveProd('${prod.id}')">
+        Save ${prod.name}
+      </button>
+    </div>
+  `;
+
+  // Render dynamic bits
+  renderImages(prod.id);
+  renderSpecs(prod.id);
+  renderTags(prod.id);
+  renderFAQs(prod.id);
+
+  // Set up drag-and-drop on img slots
+  setupDrop(prod.id);
+}
+
+// ─── IMAGES ───────────────────────────────────────────────────────────────────
+function renderImages(pid) {
+  const s = state[pid] || {};
+  const imgs = s.images || ['','','',''];
+  const wrap = document.getElementById('imgs-' + pid);
+  wrap.innerHTML = '';
+  imgs.forEach((src, i) => {
+    const slot = document.createElement('div');
+    const slotLabels = ['Hero image (main large photo)', 'Gallery photo 2', 'Gallery photo 3', 'Gallery photo 4'];
+    slot.className = 'img-slot' + (src ? ' filled' : '') + (i===0 ? ' main-slot' : '');
+    slot.dataset.idx = i;
+    slot.dataset.pid = pid;
+    if (src) {
+      slot.innerHTML = '<img src="' + src + '" alt=""/><div class="img-ov"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span>' + slotLabels[i] + '</span></div>';
+    } else {
+      slot.innerHTML = '<svg class="img-empty-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><div class="img-empty-txt">' + slotLabels[i] + '</div>';
+    }
+    slot.onclick = () => triggerImgUpload(pid, i);
+    wrap.appendChild(slot);
+
+    // hidden file input
+    const fi = document.createElement('input');
+    fi.type = 'file';
+    fi.accept = 'image/*';
+    fi.id = `fi-${pid}-${i}`;
+    fi.onchange = e => handleImgFile(pid, i, e.target.files[0]);
+    wrap.appendChild(fi);
+  });
+}
+
+function triggerImgUpload(pid, idx) {
+  document.getElementById(`fi-${pid}-${idx}`).click();
+}
+
+function setupDrop(pid) {
+  setTimeout(() => {
+    document.querySelectorAll(`#imgs-${pid} .img-slot`).forEach(slot => {
+      slot.addEventListener('dragover', e => { e.preventDefault(); slot.classList.add('drag-over'); });
+      slot.addEventListener('dragleave', () => slot.classList.remove('drag-over'));
+      slot.addEventListener('drop', e => {
+        e.preventDefault();
+        slot.classList.remove('drag-over');
+        const file = e.dataTransfer.files[0];
+        if (file) handleImgFile(pid, parseInt(slot.dataset.idx), file);
+      });
+    });
+  }, 100);
+}
+
+function handleImgFile(pid, idx, file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    if (!state[pid]) state[pid] = {};
+    if (!state[pid].images) state[pid].images = ['','','',''];
+    state[pid].images[idx] = e.target.result;
+    saveState();
+    renderImages(pid);
+    setupDrop(pid);
+    toast('Photo updated ✓', 'ok');
+  };
+  reader.readAsDataURL(file);
+}
+
+// ─── SPECS ────────────────────────────────────────────────────────────────────
+function renderSpecs(pid) {
+  const s = state[pid] || {};
+  const specs = s.specs || [];
+  const wrap = document.getElementById(pid + '-specs-wrap');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  specs.forEach((spec, i) => {
+    const row = document.createElement('div');
+    row.className = 'spec-row';
+    row.innerHTML = `
+      <input type="text" value="${esc(spec.label)}" placeholder="Label e.g. Sign Size" oninput="updSpec('${pid}',${i},'label',this.value)"/>
+      <input type="text" value="${esc(spec.value)}" placeholder="Value e.g. 5' x 8'" oninput="updSpec('${pid}',${i},'value',this.value)"/>
+    `;
+    wrap.appendChild(row);
+  });
+}
+
+function addSpec(pid) {
+  if (!state[pid]) state[pid] = {};
+  if (!state[pid].specs) state[pid].specs = [];
+  state[pid].specs.push({label:'',value:''});
+  renderSpecs(pid);
+  saveState();
+}
+
+function updSpec(pid, i, key, val) {
+  if (!state[pid]?.specs) return;
+  state[pid].specs[i][key] = val;
+  saveState();
+}
+
+// ─── TAGS ─────────────────────────────────────────────────────────────────────
+function renderTags(pid) {
+  const s = state[pid] || {};
+  const tags = s.features || [];
+  const wrap = document.getElementById(pid + '-tags');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  tags.forEach((t, i) => {
+    const tag = document.createElement('span');
+    tag.className = 'tag';
+    tag.innerHTML = `${esc(t)} <span class="tag-x" onclick="removeTag('${pid}',${i})">×</span>`;
+    wrap.appendChild(tag);
+  });
+}
+
+function addTag(pid) {
+  const inp = document.getElementById(pid + '-tag-input');
+  const val = inp.value.trim();
+  if (!val) return;
+  if (!state[pid]) state[pid] = {};
+  if (!state[pid].features) state[pid].features = [];
+  state[pid].features.push(val);
+  inp.value = '';
+  renderTags(pid);
+  saveState();
+}
+
+function removeTag(pid, i) {
+  state[pid].features.splice(i, 1);
+  renderTags(pid);
+  saveState();
+}
+
+// ─── FAQs ─────────────────────────────────────────────────────────────────────
+function renderFAQs(pid) {
+  const s = state[pid] || {};
+  const faqs = s.faqs || [];
+  const wrap = document.getElementById(pid + '-faqs-wrap');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  faqs.forEach((faq, i) => {
+    const item = document.createElement('div');
+    item.className = 'faq-item';
+    item.innerHTML = `
+      <div class="faq-head">
+        <span class="faq-num">FAQ ${i+1}</span>
+        <button class="faq-del" onclick="removeFAQ('${pid}',${i})"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+      </div>
+      <div class="field" style="margin-bottom:10px">
+        <div class="fl">Question</div>
+        <input type="text" value="${esc(faq.q)}" oninput="updFAQ('${pid}',${i},'q',this.value)" placeholder="e.g. How does Curbex work?"/>
+        <div class="sub">→ Bold clickable heading customers tap to expand</div>
+      </div>
+      <div class="field">
+        <div class="fl">Answer</div>
+        <textarea oninput="updFAQ('${pid}',${i},'a',this.value)" placeholder="Answer…">${esc(faq.a)}</textarea>
+        <div class="sub">→ Text that drops down when the question is clicked</div>
+      </div>
+    `;
+    wrap.appendChild(item);
+  });
+}
+
+function addFAQ(pid) {
+  if (!state[pid]) state[pid] = {};
+  if (!state[pid].faqs) state[pid].faqs = [];
+  state[pid].faqs.push({q:'',a:''});
+  renderFAQs(pid);
+  saveState();
+}
+
+function removeFAQ(pid, i) {
+  state[pid].faqs.splice(i, 1);
+  renderFAQs(pid);
+  saveState();
+}
+
+function updFAQ(pid, i, key, val) {
+  if (!state[pid]?.faqs) return;
+  state[pid].faqs[i][key] = val;
+  saveState();
+}
+
+// ─── UPDATE HELPERS ───────────────────────────────────────────────────────────
+function upd(pid, key, val) {
+  if (!state[pid]) state[pid] = {};
+  state[pid][key] = val;
+  saveState();
+}
+
+function saveProd(pid) {
+  toast(`${pid} saved ✓`, 'ok');
+}
+
+// ─── TOGGLE CARDS ─────────────────────────────────────────────────────────────
+function toggleCard(head) {
+  const body = head.nextElementSibling;
+  const caret = head.querySelector('.caret');
+  body.classList.toggle('shut');
+  caret.classList.toggle('open');
+}
+
+// ─── GITHUB TEST ─────────────────────────────────────────────────────────────
+async function testGH() {
+  const token = document.getElementById('gh-token').value.trim();
+  const owner = document.getElementById('gh-owner').value.trim();
+  const repo  = document.getElementById('gh-repo').value.trim();
+  const msg   = document.getElementById('gh-msg');
+  if (!token || !owner || !repo) { msg.textContent = 'Fill in all fields first.'; return; }
+  msg.textContent = 'Testing…';
+  try {
+    const r = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
+      headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+    });
+    if (r.ok) { msg.style.color = 'var(--green)'; msg.textContent = '✓ Connected!'; }
+    else { msg.style.color = 'var(--red)'; msg.textContent = `✗ Error ${r.status} — check token & repo name.`; }
+  } catch(e) { msg.style.color = 'var(--red)'; msg.textContent = '✗ Network error.'; }
+}
+
+// ─── PUBLISH ─────────────────────────────────────────────────────────────────
+async function publishAll() {
+  const token  = localStorage.getItem('curbex-gh') ? JSON.parse(localStorage.getItem('curbex-gh')).token  : '';
+  const owner  = localStorage.getItem('curbex-gh') ? JSON.parse(localStorage.getItem('curbex-gh')).owner  : '';
+  const repo   = localStorage.getItem('curbex-gh') ? JSON.parse(localStorage.getItem('curbex-gh')).repo   : '';
+  const branch = localStorage.getItem('curbex-gh') ? JSON.parse(localStorage.getItem('curbex-gh')).branch : 'main';
+
+  if (!token || !owner || !repo) {
+    toast('Set up GitHub in Settings first', 'err');
+    go('settings');
+    return;
+  }
+
+  const overlay = document.getElementById('pub-overlay');
+  const log = document.getElementById('pub-log');
+  overlay.classList.add('on');
+  log.innerHTML = '';
+
+  function logLine(msg, cls='') {
+    log.innerHTML += `<div class="${cls}">${msg}</div>`;
+    log.scrollTop = log.scrollHeight;
+  }
+
+  logLine('Starting publish…', 'spin');
+
+  // Publish site settings (footer) to index.html and all product pages
+  const siteSettings = getSiteSettings();
+  const ALL_FILES = [
+    { name: 'index', file: 'index.html' },
+    ...PRODUCTS.map(p => ({ name: p.name, file: p.file }))
+  ];
+  if (siteSettings && Object.keys(siteSettings).length > 0) {
+    for (const f of ALL_FILES) {
+      logLine(`⟳ Patching footer in ${f.file}…`, 'spin');
+      try {
+        const { sha, content: rawHtml } = await fetchFileContent(token, owner, repo, branch, f.file);
+        let html = rawHtml;
+        html = patchFooter(html, siteSettings);
+        const encoded = btoa(unescape(encodeURIComponent(html)));
+        const body = { message: `Update footer in ${f.file} via admin`, content: encoded, branch };
+        if (sha) body.sha = sha;
+        const rr = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${f.file}`, {
+          method: 'PUT',
+          headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        if (rr.ok) logLine(`✓ ${f.name} footer updated`, 'ok');
+        else { const err = await rr.json(); logLine(`✗ ${f.name}: ${err.message}`, 'err'); }
+      } catch(e) {
+        logLine(`✗ ${f.name}: ${e.message}`, 'err');
+      }
+    }
+  }
+
+  // ── Publish homepage content + carousel pricing to index.html ──
+  const hpState = getHomepageState();
+  const cpState = getCarouselPricing();
+  const hasHpChanges = hpState && Object.keys(hpState).length > 0;
+  const hasCpChanges = cpState && Object.keys(cpState).length > 0;
+  if (hasHpChanges || hasCpChanges) {
+    logLine('⟳ Updating index.html content…', 'spin');
+    try {
+      const { sha, content: rawHtml } = await fetchFileContent(token, owner, repo, branch, 'index.html');
+      let html = rawHtml;
+      html = patchHomepage(html, hpState);
+      html = patchCarouselPricing(html, cpState);
+      const encoded = btoa(unescape(encodeURIComponent(html)));
+      const body = { message: 'Update index.html content via admin', content: encoded, branch };
+      if (sha) body.sha = sha;
+      const rr = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/index.html`, {
+        method: 'PUT',
+        headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (rr.ok) logLine('✓ index.html content updated', 'ok');
+      else { const err = await rr.json(); logLine('✗ index.html: ' + err.message, 'err'); }
+    } catch(e) {
+      logLine('✗ index.html: ' + e.message, 'err');
+    }
+  }
+
+  for (const prod of PRODUCTS) {
+    const s = state[prod.id];
+    if (!s || Object.keys(s).length === 0) {
+      logLine(`⏭ ${prod.name} — no changes, skipping`);
+      continue;
+    }
+    logLine(`⟳ Updating ${prod.name}…`, 'spin');
+    try {
+      // Get current file SHA
+      const sha = await getFileSHA(token, owner, repo, branch, prod.file);
+      const content = await buildHTML(prod, s);
+      const encoded = btoa(unescape(encodeURIComponent(content)));
+      const body = { message: `Update ${prod.file} via admin panel`, content: encoded, branch };
+      if (sha) body.sha = sha;
+      const r = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${prod.file}`, {
+        method: 'PUT',
+        headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (r.ok) logLine(`✓ ${prod.name} published`, 'ok');
+      else { const err = await r.json(); logLine(`✗ ${prod.name}: ${err.message}`, 'err'); }
+    } catch(e) {
+      logLine(`✗ ${prod.name}: ${e.message}`, 'err');
+    }
+  }
+
+  logLine('Done!', 'ok');
+  dirty = false;
+  document.getElementById('unsaved-badge').style.display = 'none';
+}
+
+async function getFileSHA(token, owner, repo, branch, path) {
+  // Try Contents API first (works for all files, returns metadata)
+  const r = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`, {
+    headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+  });
+  if (r.ok) {
+    const d = await r.json();
+    if (d.sha) return d.sha;
+  }
+  // Fallback for large files: use Git Trees API
+  const tr = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}`, {
+    headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+  });
+  if (tr.ok) {
+    const td = await tr.json();
+    const entry = td.tree.find(t => t.path === path);
+    if (entry) return entry.sha;
+  }
+  return null;
+}
+
+// Fetches file content + SHA, with Git Blobs API fallback for files >1MB
+async function fetchFileContent(token, owner, repo, branch, path) {
+  // Try Contents API (works for files <1MB)
+  const r = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`, {
+    headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+  });
+  if (r.ok) {
+    const d = await r.json();
+    if (d.content && d.encoding === 'base64') {
+      return { sha: d.sha, content: decodeURIComponent(escape(atob(d.content.replace(/\n/g,'')))) };
+    }
+    // Large file — content not inline, use Blobs API with the SHA we got
+    if (d.sha) {
+      const br = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/blobs/${d.sha}`, {
+        headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+      });
+      if (br.ok) {
+        const bd = await br.json();
+        return { sha: d.sha, content: decodeURIComponent(escape(atob(bd.content.replace(/\n/g,'')))) };
+      }
+    }
+  }
+  // Contents API returned 403 for large files — fall back to Git Trees + Blobs
+  const tr = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}`, {
+    headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+  });
+  if (!tr.ok) throw new Error(`Could not fetch ${path}`);
+  const td = await tr.json();
+  const entry = td.tree.find(t => t.path === path);
+  if (!entry) throw new Error(`Could not find ${path} in repo`);
+  const br = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/blobs/${entry.sha}`, {
+    headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+  });
+  if (!br.ok) throw new Error(`Could not fetch ${path}`);
+  const bd = await br.json();
+  return { sha: entry.sha, content: decodeURIComponent(escape(atob(bd.content.replace(/\n/g,'')))) };
+}
+
+// ─── HOMEPAGE PATCHER ──────────────────────────────────────────────────────────
+function patchHomepage(html, hp) {
+  if (hp.heroHeading) html = html.replace(/(<h1 id="hero-heading">)[\s\S]*?(<\/h1>)/, '$1' + hp.heroHeading + '$2');
+  if (hp.heroDesc) html = html.replace(/(<h1 id="hero-heading">[\s\S]*?<\/h1>\s*<p>)[^<]*(<\/p>)/, '$1' + hp.heroDesc + '$2');
+  if (hp.howLabel) html = html.replace(/(<span class="label">)[^<]*(<\/span>)/, '$1' + hp.howLabel + '$2');
+  if (hp.howHeading) html = html.replace(/(<h2 id="how-heading" class="heading">)[^<]*(<\/h2>)/, '$1' + hp.howHeading + '$2');
+  if (hp.howSubtext) html = html.replace(/(<p class="subtext">)[^<]*(<\/p>)/, '$1' + hp.howSubtext + '$2');
+  if (hp.pricingHeading) html = html.replace(/(<h2 id="pricing-heading" class="heading">)[^<]*(<\/h2>)/, '$1' + hp.pricingHeading + '$2');
+  if (hp.usecasesHeading) html = html.replace(/(<h2 id="usecases-heading" class="heading">)[^<]*(<\/h2>)/, '$1' + hp.usecasesHeading + '$2');
+  if (hp.faqHeading) html = html.replace(/(<h2 id="faq-heading" class="faq-heading">)[^<]*(<\/h2>)/, '$1' + hp.faqHeading + '$2');
+  if (hp.productsHeading) html = html.replace(/(<h2 id="products-heading">)[^<]*(<\/h2>)/, '$1' + hp.productsHeading + '$2');
+  if (hp.bannerHeading) html = html.replace(/(id="banner"[\s\S]*?<h2>)[\s\S]*?(<\/h2>)/, '$1' + hp.bannerHeading + '$2');
+  if (hp.ctaHeading) {
+    html = html.replace(/(id="cta"[\s\S]*?<h2>)[\s\S]*?(<\/h2>)/, '$1' + hp.ctaHeading + '$2');
+    if (!html.match(/id="cta"/)) {
+      html = html.replace(/(<section[^>]*>\s*<div class="container"[^>]*>\s*<div[^>]*>\s*<h2>)Ready to get noticed[^<]*(<\/h2>)/, '$1' + hp.ctaHeading + '$2');
+    }
+  }
+  // Patch images
+  if (hp.img_hero) {
+    html = html.replace(/(<div class="hero-right">\s*<img src=")[^"]*(")/,'$1' + hp.img_hero + '$2');
+  }
+  if (hp.img_how) {
+    html = html.replace(/(<div class="how-right">\s*<img src=")[^"]*(")/,'$1' + hp.img_how + '$2');
+  }
+  if (hp.img_pricing) {
+    html = html.replace(/(<div class="pricing-img">\s*<img src=")[^"]*(")/,'$1' + hp.img_pricing + '$2');
+    // fallback: pricing-img-wrap
+    html = html.replace(/(<div class="pricing-img-wrap">\s*(?:<div[^>]*>\s*<\/div>\s*)?<img src=")[^"]*(")/,'$1' + hp.img_pricing + '$2');
+  }
+  if (hp.img_banner) {
+    html = html.replace(/(id="banner"[^>]*>\s*<img src=")[^"]*(")/,'$1' + hp.img_banner + '$2');
+  }
+  return html;
+}
+
+// ─── CAROUSEL PRICING PATCHER ─────────────────────────────────────────────────
+function patchCarouselPricing(html, cp) {
+  const nameMap = {
+    'pedestal': 'Pedestal', 'mini-b': 'Mini B', '4x4': '4\u00d74',
+    'ad-panel': 'Ad Panel', 'cube-pod': 'Cube Pod',
+    'pedestal-lit': 'Pedestal Lit', '4x8': '4\u00d78',
+  };
+  for (const [pid, cfg] of Object.entries(cp)) {
+    const name = nameMap[pid];
+    if (!name || !cfg.price) continue;
+    // First strip any existing price-label and price lines after this product's desc
+    const stripRe = new RegExp(
+      '(<p class="product-name">' + name + '</p>[\\s\\S]*?<p class="product-desc">[^<]*</p>)' +
+      '(\\s*<p class="product-price-label">[^<]*</p>)?(\\s*<p class="product-price">[^<]*</p>)?' +
+      '(\\s*<(?:a|button))',
+      ''
+    );
+    html = html.replace(stripRe, '$1$4');
+    // Now insert the new price lines before the button/link
+    if (cfg.price) {
+      let inject = '';
+      if (cfg.label && cfg.showLabel) {
+        inject += '\n            <p class="product-price-label">' + cfg.label + '</p>';
+      }
+      inject += '\n            <p class="product-price">' + cfg.price + '</p>';
+      const insertRe = new RegExp(
+        '(<p class="product-name">' + name + '</p>\\s*<p class="product-desc">[^<]*</p>)(\\s*<(?:a|button))'
+      );
+      html = html.replace(insertRe, '$1' + inject + '$2');
+    }
+    // Patch carousel product image
+    if (cfg.image) {
+      const imgRe = new RegExp(
+        '(<span class="product-heart" aria-label="Save ' + name + '">[\\s\\S]*?<div class="product-img">\\s*<img src=")[^"]*(")'
+      );
+      html = html.replace(imgRe, '$1' + cfg.image + '$2');
+    }
+  }
+  return html;
+}
+
+// ─── HTML BUILDER ─────────────────────────────────────────────────────────────
+// Fetches the current HTML file from GitHub and patches it with admin edits
+async function buildHTML(prod, s) {
+  const token  = JSON.parse(localStorage.getItem('curbex-gh')).token;
+  const owner  = JSON.parse(localStorage.getItem('curbex-gh')).owner;
+  const repo   = JSON.parse(localStorage.getItem('curbex-gh')).repo;
+  const branch = JSON.parse(localStorage.getItem('curbex-gh')).branch || 'main';
+
+  // Fetch current file content from GitHub
+  const r = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${prod.file}?ref=${branch}`, {
+    headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+  });
+  if (!r.ok) throw new Error(`Could not fetch ${prod.file}`);
+  const d = await r.json();
+  let html = decodeURIComponent(escape(atob(d.content.replace(/\n/g,''))));
+
+  // Patch title
+  if (s.title) html = html.replace(/(<h1 class="product-title">)[^<]*/,`$1${s.title}`);
+  if (s.subtitle) html = html.replace(/(<p class="product-subtitle">)[^<]*/,`$1${s.subtitle}`);
+  if (s.price) html = html.replace(/(<h2 class="product-price-heading">)[^<]*/,`$1${s.price}`);
+
+  // Patch description
+  if (s.desc) html = html.replace(/(<div class="desc-box">\s*)[\s\S]*?(\s*<\/div>)/,`$1${s.desc}$2`);
+
+  // Patch specs
+  if (s.specs && s.specs.length) {
+    let newSpecs = s.specs.map(sp => {
+      const svg = '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>';
+      return `      <div class="spec">${svg}<div><div class="spec-label">${sp.label}</div><div class="spec-value">${sp.value}</div></div></div>`;
+    }).join('\n');
+    html = html.replace(/(<div class="specs">)[\s\S]*?(<\/div>)/,`$1\n${newSpecs}\n    $2`);
+  }
+
+  // Patch features
+  if (s.features && s.features.length) {
+    const oldFeats = html.match(/<div class="features">[\s\S]*?<\/div>\s*<\/div>/);
+    if (oldFeats) {
+      const newFeats = '<div class="features">\n' + s.features.map(f =>
+        `      <div class="feature-dot"><span class="dot"></span> ${f}</div>`).join('\n') + '\n    </div>';
+      html = html.replace(/<div class="features">[\s\S]*?<\/div>(\s*<\/div>)/, newFeats + '$1');
+    }
+  }
+
+  // Patch FAQs
+  if (s.faqs && s.faqs.length) {
+    const newFaqs = s.faqs.map((faq, i) => {
+      const cls = i===0 ? 'faq-trigger open' : 'faq-trigger';
+      const bodyCls = i===0 ? 'faq-body open' : 'faq-body';
+      return `    <div class="faq-item">\n      <div class="${cls}" onclick="toggleFAQ(this)">${faq.q}<svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>\n      <div class="${bodyCls}">${faq.a}</div>\n    </div>`;
+    }).join('\n');
+    html = html.replace(/<div class="faq-list">[\s\S]*?<\/div>(\s*<div class="faq-image")/, `<div class="faq-list">\n${newFaqs}\n  </div>$1`);
+  }
+
+  // Patch images — replace base64 or filename src in main image and thumbnails
+  if (s.images) {
+    if (s.images[0]) html = html.replace(/(<img src=")[^"]*(" alt="[^"]*" id="mainImgEl"\/)>/, `$1${s.images[0]}$2>`);
+    const thumbSlots = [];
+    let thumbRx = /<div class="thumb[^"]*" onclick="setImg\(this,'([^']*)'\)"><img src="([^"]*)"/g;
+    let m, idx = 0;
+    while ((m = thumbRx.exec(html)) !== null && idx < 4) {
+      if (s.images[idx]) {
+        html = html.replace(m[0], `<div class="thumb${idx===0?' active':''}" onclick="setImg(this,'${s.images[idx]}')"><img src="${s.images[idx]}"`);
+      }
+      idx++;
+    }
+  }
+
+  return html;
+}
+
+// ─── UTILS ────────────────────────────────────────────────────────────────────
+function esc(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+let toastTimer;
+function toast(msg, type='ok') {
+  const t = document.getElementById('toast');
+  const icon = document.getElementById('toast-icon');
+  document.getElementById('toast-msg').textContent = msg;
+  t.className = `toast on ${type}`;
+  icon.innerHTML = type==='ok'
+    ? '<polyline points="20 6 9 17 4 12"/>'
+    : '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('on'), 3000);
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+loadState();
+loadHomepage();
+renderHpImages();
+buildCarouselPricingPanel();
+buildCarouselPhotosPanel();
+</script>
+</body>
+</html>
