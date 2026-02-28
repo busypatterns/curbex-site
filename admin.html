@@ -594,8 +594,6 @@ const CAROUSEL_PRODUCTS = [
   { id:'4x4',          name:'4×4' },
   { id:'ad-panel',     name:'Ad Panel' },
   { id:'cube-pod',     name:'Cube Pod' },
-  { id:'pedestal-lit', name:'Pedestal Lit' },
-  { id:'4x8',          name:'4×8' },
 ];
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
@@ -1603,7 +1601,6 @@ function patchCarouselPricing(html, cp) {
   const nameMap = {
     'pedestal': 'Pedestal', 'mini-b': 'Mini B', '4x4': '4\u00d74',
     'ad-panel': 'Ad Panel', 'cube-pod': 'Cube Pod',
-    'pedestal-lit': 'Pedestal Lit', '4x8': '4\u00d78',
   };
   for (const [pid, cfg] of Object.entries(cp)) {
     const name = nameMap[pid];
