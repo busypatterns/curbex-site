@@ -850,11 +850,12 @@ function renderHpImages() {
     wrap.appendChild(el);
     wrap.appendChild(fi);
     // drag and drop
-    el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('drag-over'); });
-    el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
+    el.addEventListener('dragenter', e => { e.preventDefault(); e.stopPropagation(); });
+    el.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); el.classList.add('drag-over'); });
+    el.addEventListener('dragleave', e => { e.preventDefault(); e.stopPropagation(); el.classList.remove('drag-over'); });
     el.addEventListener('drop', e => {
-      e.preventDefault(); el.classList.remove('drag-over');
-      const file = e.dataTransfer.files[0];
+      e.preventDefault(); e.stopPropagation(); el.classList.remove('drag-over');
+      const file = e.dataTransfer.files && e.dataTransfer.files[0];
       if (file) handleHpImgFile(slot.id, file);
     });
   });
@@ -897,11 +898,14 @@ function buildCarouselPhotosPanel() {
     fi.onchange = e => handleCarouselImgFile(p.id, e.target.files[0]);
     slot.onclick = () => fi.click();
     // Drag and drop
-    slot.addEventListener('dragover', e => { e.preventDefault(); slot.classList.add('drag-over'); });
-    slot.addEventListener('dragleave', () => slot.classList.remove('drag-over'));
+    slot.addEventListener('dragenter', e => { e.preventDefault(); e.stopPropagation(); });
+    slot.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); slot.classList.add('drag-over'); });
+    slot.addEventListener('dragleave', e => { e.preventDefault(); e.stopPropagation(); slot.classList.remove('drag-over'); });
     slot.addEventListener('drop', e => {
-      e.preventDefault(); slot.classList.remove('drag-over');
-      if (e.dataTransfer.files[0]) handleCarouselImgFile(p.id, e.dataTransfer.files[0]);
+      e.preventDefault(); e.stopPropagation(); slot.classList.remove('drag-over');
+      const file = e.dataTransfer.files && e.dataTransfer.files[0];
+      if (file) handleCarouselImgFile(p.id, file);
+      else alert('Drop event fired but no file found');
     });
     imgWrap.appendChild(slot);
     imgWrap.appendChild(fi);
@@ -1094,12 +1098,13 @@ function triggerImgUpload(pid, idx) {
 function setupDrop(pid) {
   setTimeout(() => {
     document.querySelectorAll(`#imgs-${pid} .img-slot`).forEach(slot => {
-      slot.addEventListener('dragover', e => { e.preventDefault(); slot.classList.add('drag-over'); });
-      slot.addEventListener('dragleave', () => slot.classList.remove('drag-over'));
+      slot.addEventListener('dragenter', e => { e.preventDefault(); e.stopPropagation(); });
+      slot.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); slot.classList.add('drag-over'); });
+      slot.addEventListener('dragleave', e => { e.preventDefault(); e.stopPropagation(); slot.classList.remove('drag-over'); });
       slot.addEventListener('drop', e => {
-        e.preventDefault();
+        e.preventDefault(); e.stopPropagation();
         slot.classList.remove('drag-over');
-        const file = e.dataTransfer.files[0];
+        const file = e.dataTransfer.files && e.dataTransfer.files[0];
         if (file) handleImgFile(pid, parseInt(slot.dataset.idx), file);
       });
     });
