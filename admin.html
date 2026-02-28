@@ -1289,6 +1289,11 @@ async function ghAPI(url, token, opts = {}) {
 // Publish a single file using the full Git Data API (6 steps)
 async function publishFile(filename, newContent, token, owner, repo, branch) {
   const base = `https://api.github.com/repos/${owner}/${repo}`;
+
+  // Safeguard: never publish empty content
+  if (!newContent || newContent.length < 100) {
+    throw new Error(`Refusing to publish ${filename}: content is empty or too short (${(newContent||'').length} chars)`);
+  }
   console.log(`[publish] === ${filename} (${newContent.length} chars) ===`);
 
   // Step 1: Get latest commit on the branch
@@ -1301,10 +1306,12 @@ async function publishFile(filename, newContent, token, owner, repo, branch) {
   const treeSha = commit.tree.sha;
   console.log(`[publish] Step 2 — tree: ${treeSha}`);
 
-  // Step 3: Create a new blob with the file content
+  // Step 3: Create a new blob (base64-encode to avoid JSON escaping issues with large HTML)
+  const b64 = btoa(unescape(encodeURIComponent(newContent)));
+  console.log(`[publish] Step 3 — base64 encoded: ${b64.length} chars`);
   const blob = await ghAPI(`${base}/git/blobs`, token, {
     method: 'POST',
-    body: JSON.stringify({ content: newContent, encoding: 'utf-8' })
+    body: JSON.stringify({ content: b64, encoding: 'base64' })
   });
   const newBlobSha = blob.sha;
   console.log(`[publish] Step 3 — new blob: ${newBlobSha}`);
@@ -1357,8 +1364,12 @@ async function fetchFileContent(token, owner, repo, branch, path) {
 
   // Fetch blob content
   const blob = await ghAPI(`${base}/git/blobs/${entry.sha}`, token);
-  const html = decodeURIComponent(escape(atob(blob.content.replace(/\n/g,''))));
+  if (!blob.content) throw new Error(`Blob for ${path} has no content`);
+  const raw = blob.content.replace(/[\s]/g, '');
+  if (raw.length === 0) throw new Error(`Blob for ${path} is empty`);
+  const html = decodeURIComponent(escape(atob(raw)));
   console.log(`[fetch] ✓ Got ${path} (${html.length} chars)`);
+  if (html.length < 100) throw new Error(`Fetched ${path} is suspiciously short (${html.length} chars)`);
   return html;
 }
 
