@@ -909,11 +909,16 @@ async function uploadImageToGitHub(base64DataUrl, destPath) {
   return destPath;
 }
 
+// In-memory cache of recently uploaded images (path → base64) so previews update instantly
+const _previewCache = {};
+
 // Get a preview URL for an image value (supports both legacy base64 and relative paths)
 function getImagePreviewUrl(storedValue) {
   if (!storedValue) return '';
   if (storedValue.startsWith('data:')) return storedValue;
-  // It's a relative path — build a raw GitHub URL for admin preview
+  // Use cached base64 if we just uploaded this path (avoids GitHub CDN stale cache)
+  if (_previewCache[storedValue]) return _previewCache[storedValue];
+  // Otherwise build a raw GitHub URL for admin preview
   const gh = JSON.parse(localStorage.getItem('curbex-gh') || '{}');
   const owner = gh.owner || 'busypatterns';
   const repo = gh.repo || 'curbex-site';
@@ -973,6 +978,7 @@ async function handleHpImgFile(slotId, file) {
     const dataUrl = await readFileAsBase64(file);
     const ext = getFileExt(file);
     const path = await uploadImageToGitHub(dataUrl, `images/hp-${slotId}.${ext}`);
+    _previewCache[path] = dataUrl;
     updHomepage('img_' + slotId, path);
     renderHpImages();
     toast('Photo uploaded ✓', 'ok');
@@ -1025,6 +1031,7 @@ async function handleCarouselImgFile(pid, file) {
     const dataUrl = await readFileAsBase64(file);
     const ext = getFileExt(file);
     const path = await uploadImageToGitHub(dataUrl, `images/carousel-${pid}.${ext}`);
+    _previewCache[path] = dataUrl;
     updCarouselPrice(pid, 'image', path);
     buildCarouselPhotosPanel();
     toast('Photo uploaded ✓', 'ok');
@@ -1199,6 +1206,7 @@ async function handleImgFile(pid, idx, file) {
     const dataUrl = await readFileAsBase64(file);
     const ext = getFileExt(file);
     const path = await uploadImageToGitHub(dataUrl, `images/product-${pid}-${idx}.${ext}`);
+    _previewCache[path] = dataUrl;
     if (!state[pid]) state[pid] = {};
     if (!state[pid].images) state[pid].images = ['','','',''];
     state[pid].images[idx] = path;
