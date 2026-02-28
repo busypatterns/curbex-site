@@ -1275,46 +1275,70 @@ async function testGH() {
 
 // Core publish function — GET fresh SHA then PUT, never cache anything
 async function publishFile(filename, newContent, token, owner, repo) {
+  console.log(`[publishFile] === ${filename} ===`);
+  console.log(`[publishFile] Content length: ${newContent.length} chars`);
+  console.log(`[publishFile] Content preview (first 500 chars):`, newContent.substring(0, 500));
+
   const getResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filename}`, {
     headers: { 'Authorization': `token ${token}` },
     cache: 'no-store'
   });
   const fileData = await getResponse.json();
   const freshSHA = fileData.sha;
+  console.log(`[publishFile] GET status: ${getResponse.status}`);
+  console.log(`[publishFile] Fresh SHA: ${freshSHA}`);
+
+  const encoded = btoa(unescape(encodeURIComponent(newContent)));
+  console.log(`[publishFile] Base64 length: ${encoded.length} chars`);
+  console.log(`[publishFile] Base64 preview (first 200 chars):`, encoded.substring(0, 200));
+
   const putResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filename}`, {
     method: 'PUT',
     headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       message: 'Update from admin panel',
-      content: btoa(unescape(encodeURIComponent(newContent))),
+      content: encoded,
       sha: freshSHA
     })
   });
+  const putBody = await putResponse.clone().json();
+  console.log(`[publishFile] PUT status: ${putResponse.status}`);
+  console.log(`[publishFile] PUT response:`, putBody);
   return putResponse;
 }
 
 // Fetch file content from GitHub (with Blobs API fallback for files >1MB)
 async function fetchFileContent(token, owner, repo, branch, path) {
+  console.log(`[fetchContent] Fetching ${path}…`);
   const r = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`, {
     headers: { 'Authorization': `token ${token}` },
     cache: 'no-store'
   });
+  console.log(`[fetchContent] Contents API status: ${r.status}`);
   if (r.ok) {
     const d = await r.json();
+    console.log(`[fetchContent] encoding: ${d.encoding}, content length: ${(d.content||'').length}, has sha: ${!!d.sha}`);
     if (d.content && d.encoding === 'base64') {
-      return decodeURIComponent(escape(atob(d.content.replace(/\n/g,''))));
+      const html = decodeURIComponent(escape(atob(d.content.replace(/\n/g,''))));
+      console.log(`[fetchContent] ✓ Got ${path} via Contents API (${html.length} chars)`);
+      return html;
     }
     if (d.sha) {
+      console.log(`[fetchContent] Large file, using Blobs API with sha ${d.sha}`);
       const br = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/blobs/${d.sha}`, {
         headers: { 'Authorization': `token ${token}` },
         cache: 'no-store'
       });
+      console.log(`[fetchContent] Blobs API status: ${br.status}`);
       if (br.ok) {
         const bd = await br.json();
-        return decodeURIComponent(escape(atob(bd.content.replace(/\n/g,''))));
+        const html = decodeURIComponent(escape(atob(bd.content.replace(/\n/g,''))));
+        console.log(`[fetchContent] ✓ Got ${path} via Blobs API (${html.length} chars)`);
+        return html;
       }
     }
   }
+  console.log(`[fetchContent] Falling back to Git Trees API`);
   const tr = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}`, {
     headers: { 'Authorization': `token ${token}` },
     cache: 'no-store'
@@ -1329,7 +1353,9 @@ async function fetchFileContent(token, owner, repo, branch, path) {
   });
   if (!br.ok) throw new Error(`Could not fetch ${path}`);
   const bd = await br.json();
-  return decodeURIComponent(escape(atob(bd.content.replace(/\n/g,''))));
+  const html = decodeURIComponent(escape(atob(bd.content.replace(/\n/g,''))));
+  console.log(`[fetchContent] ✓ Got ${path} via Trees+Blobs (${html.length} chars)`);
+  return html;
 }
 
 async function publishAll() {
@@ -1364,20 +1390,45 @@ async function publishAll() {
   const hasHpChanges = hpState && Object.keys(hpState).length > 0;
   const hasCpChanges = cpState && Object.keys(cpState).length > 0;
 
+  console.log('[publishAll] === STATE DUMP ===');
+  console.log('[publishAll] siteSettings:', JSON.stringify(siteSettings));
+  console.log('[publishAll] hasFooter:', hasFooter);
+  console.log('[publishAll] hpState:', JSON.stringify(hpState));
+  console.log('[publishAll] hasHpChanges:', hasHpChanges);
+  console.log('[publishAll] cpState:', JSON.stringify(cpState));
+  console.log('[publishAll] hasCpChanges:', hasCpChanges);
+
   // ── index.html ──
   if (hasFooter || hasHpChanges || hasCpChanges) {
     logLine('⟳ Updating index.html…', 'spin');
     try {
       let html = await fetchFileContent(token, owner, repo, branch, 'index.html');
-      if (hasFooter) html = patchFooter(html, siteSettings);
-      if (hasHpChanges) html = patchHomepage(html, hpState);
-      if (hasCpChanges) html = patchCarouselPricing(html, cpState);
+      const originalLength = html.length;
+      console.log(`[publishAll] Fetched index.html: ${originalLength} chars`);
+      if (hasFooter) {
+        html = patchFooter(html, siteSettings);
+        console.log(`[publishAll] After patchFooter: ${html.length} chars (changed: ${html.length !== originalLength})`);
+      }
+      if (hasHpChanges) {
+        const beforePatch = html.length;
+        html = patchHomepage(html, hpState);
+        console.log(`[publishAll] After patchHomepage: ${html.length} chars (changed: ${html.length !== beforePatch})`);
+      }
+      if (hasCpChanges) {
+        const beforePatch = html.length;
+        html = patchCarouselPricing(html, cpState);
+        console.log(`[publishAll] After patchCarouselPricing: ${html.length} chars (changed: ${html.length !== beforePatch})`);
+      }
+      console.log(`[publishAll] Total content change: ${html.length - originalLength} chars`);
       const r = await publishFile('index.html', html, token, owner, repo);
       if (r.ok) logLine('✓ index.html updated', 'ok');
       else { const err = await r.json(); logLine('✗ index.html: ' + err.message, 'err'); }
     } catch(e) {
+      console.error('[publishAll] index.html error:', e);
       logLine('✗ index.html: ' + e.message, 'err');
     }
+  } else {
+    console.log('[publishAll] Skipping index.html — no changes detected');
   }
 
   // ── Product pages ──
