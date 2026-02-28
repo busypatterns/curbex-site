@@ -552,6 +552,25 @@ if (sessionStorage.getItem('curbex-auth') === '1') {
 }
 </script>
 <script>
+// ─── DRAG AND DROP (registered first, before anything else) ──────────────────
+document.ondragover = function(e) { e.preventDefault(); return false; };
+document.ondrop = function(e) {
+  e.preventDefault();
+  var el = e.target;
+  while (el && el !== document) {
+    if (el.classList && el.classList.contains('img-slot')) break;
+    el = el.parentNode;
+  }
+  if (!el || el === document) return false;
+  var file = e.dataTransfer.files[0];
+  if (!file) return false;
+  var t = el.getAttribute('data-drop-type');
+  if (t === 'hp') handleHpImgFile(el.getAttribute('data-slot-id'), file);
+  else if (t === 'carousel') handleCarouselImgFile(el.getAttribute('data-pid'), file);
+  else if (t === 'product') handleImgFile(el.getAttribute('data-pid'), parseInt(el.getAttribute('data-idx')), file);
+  return false;
+};
+
 // ─── PRODUCT CONFIG ───────────────────────────────────────────────────────────
 const PRODUCTS = [
   { id:'mini-b',    name:'Mini B',    file:'mini-b.html',    preview:'mini-b.html' },
@@ -1587,34 +1606,6 @@ function toast(msg, type='ok') {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove('on'), 3000);
 }
-
-// ─── GLOBAL DRAG-AND-DROP ────────────────────────────────────────────────────
-// Single delegated handler for ALL image slots — guaranteed to fire
-document.addEventListener('dragover', function(e) {
-  e.preventDefault();
-  e.dataTransfer.dropEffect = 'copy';
-  var slot = e.target.closest('.img-slot');
-  // Remove highlight from all other slots
-  document.querySelectorAll('.img-slot.drag-over').forEach(function(s) { if (s !== slot) s.classList.remove('drag-over'); });
-  if (slot) slot.classList.add('drag-over');
-});
-document.addEventListener('dragleave', function(e) {
-  if (e.target.classList && e.target.classList.contains('img-slot')) {
-    e.target.classList.remove('drag-over');
-  }
-});
-document.addEventListener('drop', function(e) {
-  e.preventDefault();
-  document.querySelectorAll('.img-slot.drag-over').forEach(function(s) { s.classList.remove('drag-over'); });
-  var slot = e.target.closest('.img-slot');
-  if (!slot) return;
-  var file = e.dataTransfer.files && e.dataTransfer.files[0];
-  if (!file || !file.type.startsWith('image/')) return;
-  var type = slot.dataset.dropType;
-  if (type === 'hp') handleHpImgFile(slot.dataset.slotId, file);
-  else if (type === 'carousel') handleCarouselImgFile(slot.dataset.pid, file);
-  else if (type === 'product') handleImgFile(slot.dataset.pid, parseInt(slot.dataset.idx), file);
-});
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 loadState();
