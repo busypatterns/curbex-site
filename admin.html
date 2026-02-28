@@ -1303,8 +1303,17 @@ async function publishAll() {
   const hasHpChanges = hpState && Object.keys(hpState).length > 0;
   const hasCpChanges = cpState && Object.keys(cpState).length > 0;
 
-  // Helper to PUT a file to GitHub
-  async function putFile(path, sha, html, commitMsg) {
+  // Helper to PUT a file to GitHub — always fetches a FRESH SHA right before updating
+  async function putFile(path, html, commitMsg) {
+    // GET the latest SHA from GitHub immediately before updating
+    const shaResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`, {
+      headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+    });
+    let sha = null;
+    if (shaResp.ok) {
+      const shaData = await shaResp.json();
+      sha = shaData.sha;
+    }
     const encoded = btoa(unescape(encodeURIComponent(html)));
     const body = { message: commitMsg, content: encoded, branch };
     if (sha) body.sha = sha;
@@ -1319,12 +1328,12 @@ async function publishAll() {
   if (hasFooter || hasHpChanges || hasCpChanges) {
     logLine('⟳ Updating index.html…', 'spin');
     try {
-      const { sha, content: rawHtml } = await fetchFileContent(token, owner, repo, branch, 'index.html');
+      const { content: rawHtml } = await fetchFileContent(token, owner, repo, branch, 'index.html');
       let html = rawHtml;
       if (hasFooter) html = patchFooter(html, siteSettings);
       if (hasHpChanges) html = patchHomepage(html, hpState);
       if (hasCpChanges) html = patchCarouselPricing(html, cpState);
-      const rr = await putFile('index.html', sha, html, 'Update index.html via admin');
+      const rr = await putFile('index.html', html, 'Update index.html via admin');
       if (rr.ok) logLine('✓ index.html updated', 'ok');
       else { const err = await rr.json(); logLine('✗ index.html: ' + err.message, 'err'); }
     } catch(e) {
@@ -1342,11 +1351,11 @@ async function publishAll() {
     }
     logLine(`⟳ Updating ${prod.name}…`, 'spin');
     try {
-      const { sha, content: rawHtml } = await fetchFileContent(token, owner, repo, branch, prod.file);
+      const { content: rawHtml } = await fetchFileContent(token, owner, repo, branch, prod.file);
       let html = rawHtml;
       if (hasFooter) html = patchFooter(html, siteSettings);
       if (hasEdits) html = patchProductHTML(html, s);
-      const r = await putFile(prod.file, sha, html, `Update ${prod.file} via admin`);
+      const r = await putFile(prod.file, html, `Update ${prod.file} via admin`);
       if (r.ok) logLine(`✓ ${prod.name} updated`, 'ok');
       else { const err = await r.json(); logLine(`✗ ${prod.name}: ${err.message}`, 'err'); }
     } catch(e) {
