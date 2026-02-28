@@ -1374,6 +1374,8 @@ async function fetchFileContent(token, owner, repo, branch, path) {
 }
 
 async function publishAll() {
+  alert('publishAll v2.1 called');
+
   const gh = JSON.parse(localStorage.getItem('curbex-gh') || '{}');
   const token = gh.token || '';
   const owner = gh.owner || '';
@@ -1381,6 +1383,7 @@ async function publishAll() {
   const branch = gh.branch || 'main';
 
   if (!token || !owner || !repo) {
+    alert('ERROR: GitHub settings missing. Token: ' + (token ? 'set' : 'MISSING') + ', Owner: ' + (owner || 'MISSING') + ', Repo: ' + (repo || 'MISSING'));
     toast('Set up GitHub in Settings first', 'err');
     go('settings');
     return;
@@ -1396,7 +1399,7 @@ async function publishAll() {
     log.scrollTop = log.scrollHeight;
   }
 
-  logLine('Starting publish…', 'spin');
+  logLine('Starting publish (v2.1)…', 'spin');
 
   const siteSettings = getSiteSettings();
   const hasFooter = siteSettings && Object.keys(siteSettings).length > 0;
@@ -1405,13 +1408,9 @@ async function publishAll() {
   const hasHpChanges = hpState && Object.keys(hpState).length > 0;
   const hasCpChanges = cpState && Object.keys(cpState).length > 0;
 
-  console.log('[publishAll] === STATE DUMP ===');
-  console.log('[publishAll] siteSettings:', JSON.stringify(siteSettings));
-  console.log('[publishAll] hasFooter:', hasFooter);
-  console.log('[publishAll] hpState:', JSON.stringify(hpState));
-  console.log('[publishAll] hasHpChanges:', hasHpChanges);
-  console.log('[publishAll] cpState:', JSON.stringify(cpState));
-  console.log('[publishAll] hasCpChanges:', hasCpChanges);
+  const stateMsg = `Footer: ${hasFooter}, Homepage: ${hasHpChanges}, Carousel: ${hasCpChanges}`;
+  logLine('State: ' + stateMsg);
+  alert('State check: ' + stateMsg);
 
   // ── index.html ──
   if (hasFooter || hasHpChanges || hasCpChanges) {
