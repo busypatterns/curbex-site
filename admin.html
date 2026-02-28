@@ -1272,11 +1272,72 @@ async function testGH() {
 }
 
 // ─── PUBLISH ─────────────────────────────────────────────────────────────────
+
+// Core publish function — GET fresh SHA then PUT, never cache anything
+async function publishFile(filename, newContent, token, owner, repo) {
+  const getResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filename}`, {
+    headers: { 'Authorization': `token ${token}` },
+    cache: 'no-store'
+  });
+  const fileData = await getResponse.json();
+  const freshSHA = fileData.sha;
+  const putResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filename}`, {
+    method: 'PUT',
+    headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      message: 'Update from admin panel',
+      content: btoa(unescape(encodeURIComponent(newContent))),
+      sha: freshSHA
+    })
+  });
+  return putResponse;
+}
+
+// Fetch file content from GitHub (with Blobs API fallback for files >1MB)
+async function fetchFileContent(token, owner, repo, branch, path) {
+  const r = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`, {
+    headers: { 'Authorization': `token ${token}` },
+    cache: 'no-store'
+  });
+  if (r.ok) {
+    const d = await r.json();
+    if (d.content && d.encoding === 'base64') {
+      return decodeURIComponent(escape(atob(d.content.replace(/\n/g,''))));
+    }
+    if (d.sha) {
+      const br = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/blobs/${d.sha}`, {
+        headers: { 'Authorization': `token ${token}` },
+        cache: 'no-store'
+      });
+      if (br.ok) {
+        const bd = await br.json();
+        return decodeURIComponent(escape(atob(bd.content.replace(/\n/g,''))));
+      }
+    }
+  }
+  const tr = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}`, {
+    headers: { 'Authorization': `token ${token}` },
+    cache: 'no-store'
+  });
+  if (!tr.ok) throw new Error(`Could not fetch ${path}`);
+  const td = await tr.json();
+  const entry = td.tree.find(t => t.path === path);
+  if (!entry) throw new Error(`Could not find ${path} in repo`);
+  const br = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/blobs/${entry.sha}`, {
+    headers: { 'Authorization': `token ${token}` },
+    cache: 'no-store'
+  });
+  if (!br.ok) throw new Error(`Could not fetch ${path}`);
+  const bd = await br.json();
+  return decodeURIComponent(escape(atob(bd.content.replace(/\n/g,''))));
+}
+
 async function publishAll() {
-  const token  = localStorage.getItem('curbex-gh') ? JSON.parse(localStorage.getItem('curbex-gh')).token  : '';
-  const owner  = localStorage.getItem('curbex-gh') ? JSON.parse(localStorage.getItem('curbex-gh')).owner  : '';
-  const repo   = localStorage.getItem('curbex-gh') ? JSON.parse(localStorage.getItem('curbex-gh')).repo   : '';
-  const branch = localStorage.getItem('curbex-gh') ? JSON.parse(localStorage.getItem('curbex-gh')).branch : 'main';
+  const gh = JSON.parse(localStorage.getItem('curbex-gh') || '{}');
+  const token = gh.token || '';
+  const owner = gh.owner || '';
+  const repo = gh.repo || '';
+  const branch = gh.branch || 'main';
 
   if (!token || !owner || !repo) {
     toast('Set up GitHub in Settings first', 'err');
@@ -1303,46 +1364,23 @@ async function publishAll() {
   const hasHpChanges = hpState && Object.keys(hpState).length > 0;
   const hasCpChanges = cpState && Object.keys(cpState).length > 0;
 
-  // Helper to PUT a file to GitHub — always fetches a FRESH SHA right before updating
-  async function putFile(path, html, commitMsg) {
-    // GET the latest SHA from GitHub immediately before updating (bypass browser cache)
-    const shaResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`, {
-      headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
-      cache: 'no-store'
-    });
-    let sha = null;
-    if (shaResp.ok) {
-      const shaData = await shaResp.json();
-      sha = shaData.sha;
-    }
-    const encoded = btoa(unescape(encodeURIComponent(html)));
-    const body = { message: commitMsg, content: encoded, branch };
-    if (sha) body.sha = sha;
-    return fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
-      method: 'PUT',
-      headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-  }
-
-  // ── index.html: fetch ONCE, apply ALL patches, PUT ONCE ──
+  // ── index.html ──
   if (hasFooter || hasHpChanges || hasCpChanges) {
     logLine('⟳ Updating index.html…', 'spin');
     try {
-      const { content: rawHtml } = await fetchFileContent(token, owner, repo, branch, 'index.html');
-      let html = rawHtml;
+      let html = await fetchFileContent(token, owner, repo, branch, 'index.html');
       if (hasFooter) html = patchFooter(html, siteSettings);
       if (hasHpChanges) html = patchHomepage(html, hpState);
       if (hasCpChanges) html = patchCarouselPricing(html, cpState);
-      const rr = await putFile('index.html', html, 'Update index.html via admin');
-      if (rr.ok) logLine('✓ index.html updated', 'ok');
-      else { const err = await rr.json(); logLine('✗ index.html: ' + err.message, 'err'); }
+      const r = await publishFile('index.html', html, token, owner, repo);
+      if (r.ok) logLine('✓ index.html updated', 'ok');
+      else { const err = await r.json(); logLine('✗ index.html: ' + err.message, 'err'); }
     } catch(e) {
       logLine('✗ index.html: ' + e.message, 'err');
     }
   }
 
-  // ── Product pages: fetch ONCE per file, apply footer + product edits, PUT ONCE ──
+  // ── Product pages ──
   for (const prod of PRODUCTS) {
     const s = state[prod.id];
     const hasEdits = s && Object.keys(s).length > 0;
@@ -1352,11 +1390,10 @@ async function publishAll() {
     }
     logLine(`⟳ Updating ${prod.name}…`, 'spin');
     try {
-      const { content: rawHtml } = await fetchFileContent(token, owner, repo, branch, prod.file);
-      let html = rawHtml;
+      let html = await fetchFileContent(token, owner, repo, branch, prod.file);
       if (hasFooter) html = patchFooter(html, siteSettings);
       if (hasEdits) html = patchProductHTML(html, s);
-      const r = await putFile(prod.file, html, `Update ${prod.file} via admin`);
+      const r = await publishFile(prod.file, html, token, owner, repo);
       if (r.ok) logLine(`✓ ${prod.name} updated`, 'ok');
       else { const err = await r.json(); logLine(`✗ ${prod.name}: ${err.message}`, 'err'); }
     } catch(e) {
@@ -1367,49 +1404,6 @@ async function publishAll() {
   logLine('Done!', 'ok');
   dirty = false;
   document.getElementById('unsaved-badge').style.display = 'none';
-}
-
-// Fetches file content from GitHub, with Git Blobs API fallback for files >1MB
-// Never caches — every call hits the live API
-async function fetchFileContent(token, owner, repo, branch, path) {
-  // Try Contents API (works for files <1MB)
-  const r = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`, {
-    headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
-    cache: 'no-store'
-  });
-  if (r.ok) {
-    const d = await r.json();
-    if (d.content && d.encoding === 'base64') {
-      return { content: decodeURIComponent(escape(atob(d.content.replace(/\n/g,'')))) };
-    }
-    // Large file — content not inline, use Blobs API
-    if (d.sha) {
-      const br = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/blobs/${d.sha}`, {
-        headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
-        cache: 'no-store'
-      });
-      if (br.ok) {
-        const bd = await br.json();
-        return { content: decodeURIComponent(escape(atob(bd.content.replace(/\n/g,'')))) };
-      }
-    }
-  }
-  // Contents API returned 403 for large files — fall back to Git Trees + Blobs
-  const tr = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}`, {
-    headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
-    cache: 'no-store'
-  });
-  if (!tr.ok) throw new Error(`Could not fetch ${path}`);
-  const td = await tr.json();
-  const entry = td.tree.find(t => t.path === path);
-  if (!entry) throw new Error(`Could not find ${path} in repo`);
-  const br = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/blobs/${entry.sha}`, {
-    headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
-    cache: 'no-store'
-  });
-  if (!br.ok) throw new Error(`Could not fetch ${path}`);
-  const bd = await br.json();
-  return { content: decodeURIComponent(escape(atob(bd.content.replace(/\n/g,'')))) };
 }
 
 // ─── HOMEPAGE PATCHER ──────────────────────────────────────────────────────────
