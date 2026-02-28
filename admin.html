@@ -553,20 +553,18 @@ if (sessionStorage.getItem('curbex-auth') === '1') {
 </script>
 <script>
 // ─── DRAG AND DROP (registered first, before anything else) ──────────────────
-document.ondragover = function(e) { e.preventDefault(); document.title = 'DRAG DETECTED'; return false; };
+document.ondragover = function(e) { e.preventDefault(); return false; };
 document.ondrop = function(e) {
   e.preventDefault();
-  alert('DROP EVENT FIRED on: ' + e.target.tagName + '.' + (e.target.className || 'no-class'));
   var el = e.target;
   while (el && el !== document) {
     if (el.classList && el.classList.contains('img-slot')) break;
     el = el.parentNode;
   }
-  if (!el || el === document) { alert('No .img-slot found'); return false; }
+  if (!el || el === document) return false;
   var file = e.dataTransfer.files[0];
-  if (!file) { alert('No file in drop'); return false; }
+  if (!file) return false;
   var t = el.getAttribute('data-drop-type');
-  alert('Routing to: ' + t + ' | file: ' + file.name);
   if (t === 'hp') handleHpImgFile(el.getAttribute('data-slot-id'), file);
   else if (t === 'carousel') handleCarouselImgFile(el.getAttribute('data-pid'), file);
   else if (t === 'product') handleImgFile(el.getAttribute('data-pid'), parseInt(el.getAttribute('data-idx')), file);
@@ -1355,8 +1353,6 @@ async function fetchFileContent(token, owner, repo, branch, path) {
 }
 
 async function publishAll() {
-  alert('publishAll v2.1 called');
-
   const gh = JSON.parse(localStorage.getItem('curbex-gh') || '{}');
   const token = gh.token || '';
   const owner = gh.owner || '';
@@ -1364,7 +1360,6 @@ async function publishAll() {
   const branch = gh.branch || 'main';
 
   if (!token || !owner || !repo) {
-    alert('ERROR: GitHub settings missing. Token: ' + (token ? 'set' : 'MISSING') + ', Owner: ' + (owner || 'MISSING') + ', Repo: ' + (repo || 'MISSING'));
     toast('Set up GitHub in Settings first', 'err');
     go('settings');
     return;
@@ -1389,9 +1384,7 @@ async function publishAll() {
   const hasHpChanges = hpState && Object.keys(hpState).length > 0;
   const hasCpChanges = cpState && Object.keys(cpState).length > 0;
 
-  const stateMsg = `Footer: ${hasFooter}, Homepage: ${hasHpChanges}, Carousel: ${hasCpChanges}`;
-  logLine('State: ' + stateMsg);
-  alert('State check: ' + stateMsg);
+  logLine(`State — Footer: ${hasFooter}, Homepage: ${hasHpChanges}, Carousel: ${hasCpChanges}`);
 
   // ── index.html ──
   if (hasFooter || hasHpChanges || hasCpChanges) {
