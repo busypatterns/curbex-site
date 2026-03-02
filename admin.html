@@ -390,6 +390,22 @@
           </div>
         </div>
       </div>
+      <div class="card">
+        <div class="card-head" onclick="toggleCard(this)">
+          <div class="card-head-l">
+            <div class="card-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+            <div><div class="card-name">FAQs</div><div class="card-note">Expandable questions in the FAQ section on the home page</div></div>
+          </div>
+          <div class="caret open"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+        </div>
+        <div class="card-body">
+          <div id="hp-faqs-wrap"></div>
+          <button class="btn" onclick="addHpFAQ()">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add FAQ
+          </button>
+        </div>
+      </div>
       <div style="display:flex;justify-content:flex-end;margin-top:4px">
         <button class="btn" style="background:var(--accent);border-color:var(--accent);color:#111;font-weight:700;padding:10px 24px" onclick="toast('Home page settings saved ✓','ok')">
           Save Home Page
@@ -819,6 +835,62 @@ function loadHomepage() {
   }
 }
 
+// ─── HOMEPAGE FAQs ───────────────────────────────────────────────────────────
+function renderHpFAQs() {
+  const hp = getHomepageState();
+  const faqs = hp.faqs || [];
+  const wrap = document.getElementById('hp-faqs-wrap');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  faqs.forEach((faq, i) => {
+    const item = document.createElement('div');
+    item.className = 'faq-item';
+    item.innerHTML = `
+      <div class="faq-head">
+        <span class="faq-num">FAQ ${i+1}</span>
+        <button class="faq-del" onclick="removeHpFAQ(${i})"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+      </div>
+      <div class="field" style="margin-bottom:10px">
+        <div class="fl">Question</div>
+        <input type="text" value="${esc(faq.q)}" oninput="updHpFAQ(${i},'q',this.value)" placeholder="Where can the sign be placed?"/>
+      </div>
+      <div class="field">
+        <div class="fl">Answer</div>
+        <textarea oninput="updHpFAQ(${i},'a',this.value)" placeholder="Answer…">${esc(faq.a)}</textarea>
+      </div>
+    `;
+    wrap.appendChild(item);
+  });
+}
+
+function addHpFAQ() {
+  const hp = getHomepageState();
+  if (!hp.faqs) hp.faqs = [];
+  hp.faqs.push({q:'', a:''});
+  localStorage.setItem('curbex-homepage', JSON.stringify(hp));
+  renderHpFAQs();
+  dirty = true;
+  document.getElementById('unsaved-badge').style.display = 'inline-flex';
+}
+
+function removeHpFAQ(i) {
+  const hp = getHomepageState();
+  hp.faqs.splice(i, 1);
+  localStorage.setItem('curbex-homepage', JSON.stringify(hp));
+  renderHpFAQs();
+  dirty = true;
+  document.getElementById('unsaved-badge').style.display = 'inline-flex';
+}
+
+function updHpFAQ(i, key, val) {
+  const hp = getHomepageState();
+  if (!hp.faqs) return;
+  hp.faqs[i][key] = val;
+  localStorage.setItem('curbex-homepage', JSON.stringify(hp));
+  dirty = true;
+  document.getElementById('unsaved-badge').style.display = 'inline-flex';
+}
+
 // ─── CAROUSEL PRICING STATE ──────────────────────────────────────────────────
 function getCarouselPricing() {
   return JSON.parse(localStorage.getItem('curbex-carousel-pricing') || '{}');
@@ -1078,7 +1150,7 @@ function go(id) {
 
   // Build panel if not yet built
   if (prod && !document.getElementById('p-'+id).dataset.built) buildPanel(prod);
-  if (id === 'homepage') { loadHomepage(); renderHpImages(); }
+  if (id === 'homepage') { loadHomepage(); renderHpImages(); renderHpFAQs(); }
   if (id === 'carousel') { buildCarouselPricingPanel(); buildCarouselPhotosPanel(); }
 }
 
@@ -1685,6 +1757,18 @@ function patchHomepage(html, hp) {
       html = html.replace(/(<section[^>]*>\s*<div class="container"[^>]*>\s*<div[^>]*>\s*<h2>)Ready to get noticed[^<]*(<\/h2>)/, '$1' + hp.ctaHeading + '$2');
     }
   }
+  // Patch FAQs
+  if (hp.faqs && hp.faqs.length) {
+    const chevronSvg = '<span class="faq-chevron" aria-hidden="true"><svg width="14" height="8" viewBox="0 0 14 8" fill="none"><path d="M1 1l6 6 6-6" stroke="#949494" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
+    const newFaqs = hp.faqs.map(faq =>
+      `      <details class="faq-item">\n        <summary class="faq-trigger">\n          <div><span class="faq-q">${faq.q}</span></div>\n          ${chevronSvg}\n        </summary>\n        <p class="faq-answer">${faq.a}</p>\n      </details>`
+    ).join('\n');
+    html = html.replace(
+      /(<div class="faq-list">)[\s\S]*?(<\/div>\s*<div class="cta-banner">)/,
+      `$1\n${newFaqs}\n    </div>\n    <div class="cta-banner">`
+    );
+  }
+
   // Patch images
   if (hp.img_hero) {
     html = html.replace(/(<div class="hero-right">\s*<img src=")[^"]*(")/,'$1' + hp.img_hero + '$2');
@@ -1834,6 +1918,7 @@ function toast(msg, type='ok') {
 loadState();
 loadHomepage();
 renderHpImages();
+renderHpFAQs();
 buildCarouselPricingPanel();
 buildCarouselPhotosPanel();
 </script>
