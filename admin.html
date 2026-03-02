@@ -502,10 +502,9 @@
           <div class="field">
             <div class="fl">GitHub Token</div>
             <input type="text" id="gh-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" oninput="saveGH()"/>
-            <button class="btn" style="margin-top:6px" onclick="navigator.clipboard.writeText(document.getElementById('gh-token').value).then(()=>toast('Token copied ✓','ok'))">
-              <svg viewBox="0 0 24 24" style="width:13px;height:13px"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-              Copy token
-            </button>
+            <div class="sub" style="margin-top:6px">
+              <span style="cursor:pointer;color:var(--accent);font-weight:600;font-size:12px" onclick="navigator.clipboard.writeText(document.getElementById('gh-token').value).then(()=>toast('Token copied ✓','ok'))">📋 Copy token to clipboard</span>
+            </div>
           </div>
           <div class="g2">
             <div class="field">
