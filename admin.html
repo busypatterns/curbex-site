@@ -289,12 +289,12 @@
         <div class="card-body">
           <div class="field">
             <div class="fl">Hero Headline</div>
-            <input type="text" id="hp-hero-heading" placeholder="e.g. Rent a Portable Sign in Dallas Fort Worth" oninput="updHomepage('heroHeading',this.value)"/>
+            <input type="text" id="hp-hero-heading" placeholder="Rent a sign in Dallas Fort Worth" oninput="updHomepage('heroHeading',this.value)"/>
             <div class="sub">→ The large h1 heading at the top of the page. Use &lt;br&gt; for line breaks.</div>
           </div>
           <div class="field">
             <div class="fl">Hero Description</div>
-            <textarea id="hp-hero-desc" placeholder="e.g. A fully managed, end-to-end solution…" oninput="updHomepage('heroDesc',this.value)"></textarea>
+            <textarea id="hp-hero-desc" placeholder="A fully managed end-to-end solution that will get your business noticed." oninput="updHomepage('heroDesc',this.value)"></textarea>
             <div class="sub">→ The paragraph text below the headline</div>
           </div>
         </div>
@@ -310,40 +310,40 @@
           <div class="g2">
             <div class="field">
               <div class="fl">How It Works — Label</div>
-              <input type="text" id="hp-how-label" placeholder="e.g. How it works" oninput="updHomepage('howLabel',this.value)"/>
+              <input type="text" id="hp-how-label" placeholder="How it works" oninput="updHomepage('howLabel',this.value)"/>
             </div>
             <div class="field">
               <div class="fl">How It Works — Heading</div>
-              <input type="text" id="hp-how-heading" placeholder="e.g. End-to-end sign service" oninput="updHomepage('howHeading',this.value)"/>
+              <input type="text" id="hp-how-heading" placeholder="End-to-end sign service" oninput="updHomepage('howHeading',this.value)"/>
             </div>
           </div>
           <div class="field">
             <div class="fl">How It Works — Subtext</div>
-            <input type="text" id="hp-how-subtext" placeholder="e.g. A simple process with a dedicated team behind it." oninput="updHomepage('howSubtext',this.value)"/>
+            <input type="text" id="hp-how-subtext" placeholder="A simple process with a dedicated team behind it." oninput="updHomepage('howSubtext',this.value)"/>
           </div>
           <div class="g2">
             <div class="field">
               <div class="fl">Pricing — Heading</div>
-              <input type="text" id="hp-pricing-heading" placeholder="e.g. One simple rate" oninput="updHomepage('pricingHeading',this.value)"/>
+              <input type="text" id="hp-pricing-heading" placeholder="One simple rate" oninput="updHomepage('pricingHeading',this.value)"/>
             </div>
             <div class="field">
               <div class="fl">Use Cases — Heading</div>
-              <input type="text" id="hp-usecases-heading" placeholder="e.g. Built for Dallas Fort Worth businesses" oninput="updHomepage('usecasesHeading',this.value)"/>
+              <input type="text" id="hp-usecases-heading" placeholder="Built for Dallas Fort Worth businesses" oninput="updHomepage('usecasesHeading',this.value)"/>
             </div>
           </div>
           <div class="g2">
             <div class="field">
               <div class="fl">FAQ — Heading</div>
-              <input type="text" id="hp-faq-heading" placeholder="e.g. Common questions" oninput="updHomepage('faqHeading',this.value)"/>
+              <input type="text" id="hp-faq-heading" placeholder="Common questions" oninput="updHomepage('faqHeading',this.value)"/>
             </div>
             <div class="field">
               <div class="fl">CTA — Heading</div>
-              <input type="text" id="hp-cta-heading" placeholder="e.g. Ready to get noticed in Dallas-Fort Worth?" oninput="updHomepage('ctaHeading',this.value)"/>
+              <input type="text" id="hp-cta-heading" placeholder="Ready to get noticed in Dallas-Fort Worth?" oninput="updHomepage('ctaHeading',this.value)"/>
             </div>
           </div>
           <div class="field">
             <div class="fl">Carousel — Section Title</div>
-            <input type="text" id="hp-products-heading" placeholder="e.g. Top 10 Rental Products" oninput="updHomepage('productsHeading',this.value)"/>
+            <input type="text" id="hp-products-heading" placeholder="Top 10 Rental Products" oninput="updHomepage('productsHeading',this.value)"/>
           </div>
         </div>
       </div>
@@ -385,7 +385,7 @@
         <div class="card-body">
           <div class="field">
             <div class="fl">Banner Heading</div>
-            <input type="text" id="hp-banner-heading" placeholder='e.g. Book a Mini B Now' oninput="updHomepage('bannerHeading',this.value)"/>
+            <input type="text" id="hp-banner-heading" placeholder='Book a Mini B Now' oninput="updHomepage('bannerHeading',this.value)"/>
             <div class="sub">→ Use &lt;br&gt; for line breaks. This is the heading shown over the banner image.</div>
           </div>
         </div>
@@ -440,6 +440,11 @@
               Add location
             </button>
             <div class="sub" style="margin-top:8px">→ Each entry appears as a line in the "Locations" column of the footer on every page</div>
+          </div>
+          <div class="field">
+            <div class="fl">Quote Form — Web3Forms Access Key</div>
+            <input type="text" id="site-quote-key" placeholder="paste your access key here" oninput="updSite('quoteKey',this.value)"/>
+            <div class="sub">→ Go to <a href="https://web3forms.com" target="_blank" style="color:var(--accent)">web3forms.com</a>, enter the email you want quotes sent to, and paste the access key here. All "Get a Quote" forms will send to that email.</div>
           </div>
           <div class="g2">
             <div class="field">
@@ -587,6 +592,14 @@ const PRODUCTS = [
   { id:'cube-pod',  name:'Cube Pod',  file:'cube-pod.html',  preview:'cube-pod.html' },
 ];
 
+const DEFAULTS = {
+  'mini-b':   { title:'Mini B', subtitle:'Printed Portable Sign', price:'Affordable Rental Rate — as Low as $10/day', desc:'The Mini B is a portable billboard-style sign designed for maximum roadside visibility...' },
+  'pedestal': { title:'Pedestal', subtitle:'Self-Weighted Portable Sign', price:'Affordable Rental Rate — as Low as $10/day', desc:'The Pedestal is a sleek, self-weighted portable sign built for high-traffic roadside placement...' },
+  '4x4':      { title:'4×4', subtitle:'Printed Portable Sign', price:'Affordable Rental Rate — as Low as $10/day', desc:'The 4×4 is a compact, double-sided sign perfect for tight spaces...' },
+  'ad-panel': { title:'Ad Panel', subtitle:'Semi-Permanent Pylon Sign', price:'Affordable Rental Rate — as Low as $10/day', desc:'The Ad Panel is a high-impact pylon-mounted sign...' },
+  'cube-pod': { title:'Cube Pod', subtitle:'Self-Weighted Rental Sign', price:'Affordable Rental Rate — as Low as $10/day', desc:'The Cube Pod is a self-weighted, freestanding sign designed for quick deployment...' }
+};
+
 // ─── CAROUSEL PRODUCTS (all products in index.html carousel) ─────────────────
 const CAROUSEL_PRODUCTS = [
   { id:'pedestal',     name:'Pedestal' },
@@ -628,6 +641,7 @@ function loadState() {
     document.getElementById('site-phone').value    = d.phone    || '';
     document.getElementById('site-email').value    = d.email    || '';
     document.getElementById('site-address').value  = d.address  || '';
+    document.getElementById('site-quote-key').value = d.quoteKey || '';
   } else {
     renderLocations(['']);
   }
@@ -740,6 +754,11 @@ function patchFooter(html, s) {
       `$1${s.email}$2`);
   }
   return html;
+}
+
+function patchQuoteKey(html, key) {
+  if (!key) return html;
+  return html.replace(/(<input[^>]*name="access_key"[^>]*value=")[^"]*(")/g, '$1' + key + '$2');
 }
 
 function saveState() {
@@ -1098,23 +1117,23 @@ function buildPanel(prod) {
         <div class="g2">
           <div class="field">
             <div class="fl">Product Title</div>
-            <input type="text" id="${prod.id}-title" value="${esc(s.title||'')}" oninput="upd('${prod.id}','title',this.value)" placeholder="e.g. Mini B"/>
+            <input type="text" id="${prod.id}-title" value="${esc(s.title||'')}" oninput="upd('${prod.id}','title',this.value)" placeholder="${esc(DEFAULTS[prod.id]?.title || '')}"/>
             <div class="sub">→ Appears as the large heading at the top of the page (e.g. <em>"Mini B"</em>)</div>
           </div>
           <div class="field">
             <div class="fl">Subtitle</div>
-            <input type="text" id="${prod.id}-subtitle" value="${esc(s.subtitle||'')}" oninput="upd('${prod.id}','subtitle',this.value)" placeholder="e.g. Printed Portable Sign"/>
+            <input type="text" id="${prod.id}-subtitle" value="${esc(s.subtitle||'')}" oninput="upd('${prod.id}','subtitle',this.value)" placeholder="${esc(DEFAULTS[prod.id]?.subtitle || '')}"/>
             <div class="sub">→ Small text directly below the title (e.g. <em>"Printed Portable Sign"</em>)</div>
           </div>
         </div>
         <div class="field">
           <div class="fl">Price / Tagline Heading</div>
-          <input type="text" id="${prod.id}-price" value="${esc(s.price||'')}" oninput="upd('${prod.id}','price',this.value)" placeholder="e.g. Affordable Rental Rate — as Low as $10/day"/>
+          <input type="text" id="${prod.id}-price" value="${esc(s.price||'')}" oninput="upd('${prod.id}','price',this.value)" placeholder="${esc(DEFAULTS[prod.id]?.price || '')}"/>
           <div class="sub">→ Bold headline below the subtitle — used to highlight pricing or a key selling point</div>
         </div>
         <div class="field">
           <div class="fl">Description</div>
-          <textarea id="${prod.id}-desc" oninput="upd('${prod.id}','desc',this.value)" placeholder="Describe this product…">${esc(s.desc||'')}</textarea>
+          <textarea id="${prod.id}-desc" oninput="upd('${prod.id}','desc',this.value)" placeholder="${esc(DEFAULTS[prod.id]?.desc || '')}">${esc(s.desc||'')}</textarea>
           <div class="sub">→ Paragraph of body text in the grey box below the product images, describing the sign in detail</div>
         </div>
         <div class="field">
@@ -1156,6 +1175,24 @@ function buildPanel(prod) {
       </div>
     </div>
 
+    <!-- TESTIMONIALS -->
+    <div class="card">
+      <div class="card-head" onclick="toggleCard(this)">
+        <div class="card-head-l">
+          <div class="card-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+          <div><div class="card-name">Testimonials</div><div class="card-note">Customer quotes shown below the FAQ section</div></div>
+        </div>
+        <div class="caret open"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+      </div>
+      <div class="card-body">
+        <div id="${prod.id}-testimonials-wrap"></div>
+        <button class="btn" onclick="addTestimonial('${prod.id}')">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Testimonial
+        </button>
+      </div>
+    </div>
+
     <!-- SAVE -->
     <div style="display:flex;justify-content:flex-end;margin-top:4px">
       <button class="btn" style="background:var(--accent);border-color:var(--accent);color:#111;font-weight:700;padding:10px 24px" onclick="saveProd('${prod.id}')">
@@ -1169,6 +1206,7 @@ function buildPanel(prod) {
   renderSpecs(prod.id);
   renderTags(prod.id);
   renderFAQs(prod.id);
+  renderTestimonials(prod.id);
 
 }
 
@@ -1331,6 +1369,65 @@ function removeFAQ(pid, i) {
 function updFAQ(pid, i, key, val) {
   if (!state[pid]?.faqs) return;
   state[pid].faqs[i][key] = val;
+  saveState();
+}
+
+// ─── TESTIMONIALS ─────────────────────────────────────────────────────────────
+function renderTestimonials(pid) {
+  const s = state[pid] || {};
+  const testimonials = s.testimonials || [];
+  const wrap = document.getElementById(pid + '-testimonials-wrap');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  testimonials.forEach((t, i) => {
+    const item = document.createElement('div');
+    item.className = 'faq-item';
+    item.innerHTML = `
+      <div class="faq-head">
+        <span class="faq-num">Testimonial ${i+1}</span>
+        <button class="faq-del" onclick="removeTestimonial('${pid}',${i})"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+      </div>
+      <div class="g2" style="margin-bottom:10px">
+        <div class="field">
+          <div class="fl">Company</div>
+          <input type="text" value="${esc(t.company)}" oninput="updTestimonial('${pid}',${i},'company',this.value)" placeholder="FMI"/>
+          <div class="sub">→ Short logo text shown above the quote</div>
+        </div>
+        <div class="field">
+          <div class="fl">Name</div>
+          <input type="text" value="${esc(t.name)}" oninput="updTestimonial('${pid}',${i},'name',this.value)" placeholder="Sydney Henderson"/>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:10px">
+        <div class="fl">Role</div>
+        <input type="text" value="${esc(t.role)}" oninput="updTestimonial('${pid}',${i},'role',this.value)" placeholder="Marketing Specialist at FMI Group"/>
+      </div>
+      <div class="field">
+        <div class="fl">Quote</div>
+        <textarea oninput="updTestimonial('${pid}',${i},'text',this.value)" placeholder="Customer testimonial text…">${esc(t.text)}</textarea>
+      </div>
+    `;
+    wrap.appendChild(item);
+  });
+}
+
+function addTestimonial(pid) {
+  if (!state[pid]) state[pid] = {};
+  if (!state[pid].testimonials) state[pid].testimonials = [];
+  state[pid].testimonials.push({company:'', name:'', role:'', text:''});
+  renderTestimonials(pid);
+  saveState();
+}
+
+function removeTestimonial(pid, i) {
+  state[pid].testimonials.splice(i, 1);
+  renderTestimonials(pid);
+  saveState();
+}
+
+function updTestimonial(pid, i, key, val) {
+  if (!state[pid]?.testimonials) return;
+  state[pid].testimonials[i][key] = val;
   saveState();
 }
 
@@ -1516,6 +1613,7 @@ async function publishAll() {
         html = patchFooter(html, siteSettings);
         console.log(`[publishAll] After patchFooter: ${html.length} chars (changed: ${html.length !== originalLength})`);
       }
+      if (siteSettings.quoteKey) html = patchQuoteKey(html, siteSettings.quoteKey);
       if (hasHpChanges) {
         const beforePatch = html.length;
         html = patchHomepage(html, hpState);
@@ -1549,6 +1647,7 @@ async function publishAll() {
     try {
       let html = await fetchFileContent(token, owner, repo, branch, prod.file);
       if (hasFooter) html = patchFooter(html, siteSettings);
+      if (siteSettings.quoteKey) html = patchQuoteKey(html, siteSettings.quoteKey);
       if (hasEdits) html = patchProductHTML(html, s);
       await publishFile(prod.file, html, token, owner, repo, branch);
       logLine(`✓ ${prod.name} updated`, 'ok');
@@ -1682,6 +1781,17 @@ function patchProductHTML(html, s) {
       return `    <div class="faq-item">\n      <div class="${cls}" onclick="toggleFAQ(this)">${faq.q}<svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>\n      <div class="${bodyCls}">${faq.a}</div>\n    </div>`;
     }).join('\n');
     html = html.replace(/<div class="faq-list">[\s\S]*?<\/div>(\s*<div class="faq-image")/, `<div class="faq-list">\n${newFaqs}\n  </div>$1`);
+  }
+
+  // Patch testimonials
+  if (s.testimonials && s.testimonials.length) {
+    const newTestimonials = s.testimonials.map(t =>
+      `    <div class="testimonial">\n      <div class="testimonial-logo"><span>${t.company}</span></div>\n      <div class="testimonial-name">${t.name}</div>\n      <div class="testimonial-role">${t.role}</div>\n      <div class="testimonial-text">${t.text}</div>\n    </div>`
+    ).join('\n');
+    html = html.replace(
+      /(<div class="testimonials-grid">)[\s\S]*?(<\/div>\s*<\/div>\s*(?=<!--|\n<div class="also))/,
+      `$1\n${newTestimonials}\n  </div>\n</div>\n`
+    );
   }
 
   // Patch images — replace base64 or filename src in main image and thumbnails

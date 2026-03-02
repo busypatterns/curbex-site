@@ -285,7 +285,7 @@
       <button class="nav-toggle" aria-label="Menu" onclick="document.querySelector('#nav .nav-links').classList.toggle('open')">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#222" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
-      <button class="nav-cta">Get a Quote</button>
+      <a href="#hero" class="nav-cta" style="text-decoration:none">Get a Quote</a>
     </div>
   </div>
 </header>
@@ -299,24 +299,27 @@
     <div class="hero-left">
       <h1 id="hero-heading">Rent a portable sign in Dallas Fort Worth, Texas</h1>
       <p>A fully managed end-to-end solution that will get your business noticed.</p>
-      <form action="/quote" method="POST" aria-label="Request a quote">
+      <form id="quoteForm" onsubmit="return submitQuote(this);" aria-label="Request a quote">
+        <input type="hidden" name="access_key" value="fe2deaad-90b4-4bf1-8781-9017dccdfb78"/>
+        <input type="hidden" name="subject" value="Quote Request - Curbex Website"/>
+        <input type="hidden" name="from_name" value="Curbex Quote Form"/>
         <div class="form-row">
           <div class="form-group">
             <label for="name">Name <span class="req">*</span></label>
-            <input type="text" id="name" name="name" placeholder="Tyler Cooper" required autocomplete="name"/>
+            <input type="text" id="name" name="name" placeholder="Tyler Cooper" required/>
           </div>
           <div class="form-group">
-            <label for="phone">Phone</label>
-            <input type="tel" id="phone" name="phone" placeholder="654 444 474" autocomplete="tel"/>
+            <label for="phone">Phone <span class="req">*</span></label>
+            <input type="tel" id="phone" name="phone" placeholder="(555) 000-0000" required/>
           </div>
         </div>
         <div class="form-group full">
-          <label for="address">Business Address</label>
-          <input type="text" id="address" name="address" placeholder="123 Main St, Dallas, TX" autocomplete="street-address"/>
+          <label for="address">Street Address <span class="req">*</span></label>
+          <input type="text" id="address" name="address" placeholder="123 Main St, Dallas, TX" required/>
         </div>
         <div class="form-group full">
           <label for="email">Email <span class="req">*</span></label>
-          <input type="email" id="email" name="email" placeholder="you@company.com" required autocomplete="email"/>
+          <input type="email" id="email" name="email" placeholder="you@company.com" required/>
         </div>
         <button type="submit" class="btn btn-yellow form-submit">Request a Quote</button>
       </form>
@@ -650,6 +653,33 @@
 </div>
 
 <script>
+function submitQuote(form) {
+  var btn = form.querySelector('.form-submit') || form.querySelector('.btn-quote');
+  var origText = btn.textContent;
+  btn.textContent = 'Sending...';
+  btn.disabled = true;
+  fetch('https://api.web3forms.com/submit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(Object.fromEntries(new FormData(form)))
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.success) {
+      form.innerHTML = '<div style="text-align:center;padding:32px 0"><h3 style="color:#22c55e;margin-bottom:8px">Thank you!</h3><p>We\'ll be in touch shortly.</p></div>';
+    } else {
+      btn.textContent = origText;
+      btn.disabled = false;
+      alert('Something went wrong. Please try again.');
+    }
+  })
+  .catch(function() {
+    btn.textContent = origText;
+    btn.disabled = false;
+    alert('Something went wrong. Please try again.');
+  });
+  return false;
+}
 (function(){
   var track=document.getElementById('carouselTrack');
   var prev=document.getElementById('prevBtn');
