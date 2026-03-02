@@ -661,7 +661,7 @@ function loadState() {
     document.getElementById('site-phone').value    = d.phone    || '';
     document.getElementById('site-email').value    = d.email    || '';
     document.getElementById('site-address').value  = d.address  || '';
-    document.getElementById('site-quote-key').value = d.quoteKey || '';
+    document.getElementById('site-quote-key').value = d.quoteKey || document.getElementById('site-quote-key').value || '';
   } else {
     renderLocations(['']);
   }
