@@ -394,7 +394,7 @@
         <div class="card-head" onclick="toggleCard(this)">
           <div class="card-head-l">
             <div class="card-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
-            <div><div class="card-name">FAQs</div><div class="card-note">Expandable questions in the FAQ section on the home page</div></div>
+            <div><div class="card-name">Common Questions</div><div class="card-note">Expandable Q&amp;A shown in the Common Questions section</div></div>
           </div>
           <div class="caret open"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
         </div>
@@ -402,7 +402,7 @@
           <div id="hp-faqs-wrap"></div>
           <button class="btn" onclick="addHpFAQ()">
             <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Add FAQ
+            Add Question
           </button>
         </div>
       </div>
@@ -847,7 +847,7 @@ function renderHpFAQs() {
     item.className = 'faq-item';
     item.innerHTML = `
       <div class="faq-head">
-        <span class="faq-num">FAQ ${i+1}</span>
+        <span class="faq-num">Question ${i+1}</span>
         <button class="faq-del" onclick="removeHpFAQ(${i})"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
       </div>
       <div class="field" style="margin-bottom:10px">
