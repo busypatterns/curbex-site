@@ -811,8 +811,20 @@ function updHomepage(key, val) {
   document.getElementById('unsaved-badge').style.display = 'inline-flex';
 }
 
+const HP_DEFAULT_QUESTIONS = [
+  { q:'Where can the sign be placed?', a:'Signs can be placed at permitted roadside locations with high visibility across the Dallas Fort Worth metro area.' },
+  { q:'How quickly can my sign be installed?', a:'Most installations happen within 3–5 business days of order confirmation, depending on location and permitting.' },
+  { q:'Can I change my ad mid-rental?', a:'Yes. You can update your creative at any time during the rental period. We handle printing and swaps.' },
+  { q:"What's included in the price?", a:'All rentals include the sign unit, installation, removal, permitting, and one printed panel.' }
+];
+
 function loadHomepage() {
   const hp = getHomepageState();
+  // Seed default common questions on first load
+  if (!hp.faqs) {
+    hp.faqs = HP_DEFAULT_QUESTIONS.map(f => ({q:f.q, a:f.a}));
+    localStorage.setItem('curbex-homepage', JSON.stringify(hp));
+  }
   const fields = {
     'hp-hero-heading': 'heroHeading',
     'hp-hero-desc': 'heroDesc',
