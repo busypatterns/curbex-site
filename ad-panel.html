@@ -376,17 +376,6 @@
       <div class="card-body"><span class="card-tag">Rental</span><div class="card-name">Cube Pod</div><div class="card-desc">Self-weighted 360° sign</div><button class="card-btn">Get Started</button></div>
     </div>
   </div>
-      <div class="card-img"><img src="11.png" alt="Pedestal"/></div>
-      <div class="card-body"><span class="card-tag">Rental</span><div class="card-name">Pedestal</div><div class="card-desc">Portable roadside sign</div><button class="card-btn">Get Started</button></div>
-    </div>
-    <div class="product-card" onclick="location.href='4x4.html'">
-      <div class="card-heart"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
-      <div class="card-img"><img src="14.png" alt="4x4"/></div>
-      <div class="card-body"><span class="card-tag">Rental</span><div class="card-name">4×4</div><div class="card-desc">Compact double-sided sign</div><button class="card-btn">Get Started</button></div>
-    </div>
-    <div class="product-card" onclick="location.href='ad-panel.html'">
-      <div class="card-heart"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
-      <div class="card-img"><img src="15.png" alt="Ad Panel"/></div>
       <div class="card-body"><span class="card-tag">Rental</span><div class="card-name">Ad Panel</div><div class="card-desc">High-impact pylon sign</div><button class="card-btn">Get Started</button></div>
     </div>
     <div class="product-card" onclick="location.href='cube-pod.html'">
@@ -500,7 +489,7 @@
   </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
   function setImg(el, src) {
     document.getElementById('mainImgEl').src = src;
     document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
@@ -518,4 +507,8 @@
     });
   }
   function openPrivacy() { document.getElementById('privacyModal').classList.add('open'); document.body.style.overflow='hidden'; }
-  function closePrivacy() { document.getElementById('privacyModal').classList.remove('open'); document.body
+  function closePrivacy() { document.getElementById('privacyModal').classList.remove('open'); document.body.style.overflow=''; }
+  function closePrivacyOutside(e) { if (e.target === document.getElementById('privacyModal')) closePrivacy(); }
+</script>
+</body>
+</html>
