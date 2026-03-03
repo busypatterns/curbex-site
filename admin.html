@@ -157,7 +157,7 @@
     .lock-btn:hover{opacity:.88}
     .lock-err{font-size:12px;color:var(--red);margin-top:10px;min-height:18px}
   </style>
-  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+
 </head>
 <body>
 
@@ -167,7 +167,11 @@
     <div class="lock-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
     <div class="lock-title">Curbex Admin</div>
     <div class="lock-sub">Sign in to continue</div>
-    <button class="lock-btn" id="lock-signin-btn" onclick="doSignIn()">Sign In</button>
+    <form onsubmit="return doSignIn(event)">
+      <input type="email" class="lock-input" id="lock-email" placeholder="Email" style="margin-bottom:10px" required/>
+      <input type="password" class="lock-input" id="lock-pw" placeholder="Password" required/>
+      <button type="submit" class="lock-btn" id="lock-signin-btn">Sign In</button>
+    </form>
     <div class="lock-err" id="lock-err"></div>
   </div>
 </div>
@@ -548,38 +552,66 @@
 </div>
 
 <script>
-// ── AUTH GATE (Netlify Identity) ──
-function doSignIn() {
-  if (typeof netlifyIdentity !== 'undefined') {
-    netlifyIdentity.open('login');
-  } else {
-    document.getElementById('lock-err').textContent = 'Identity widget failed to load. Try refreshing.';
-  }
+// ── AUTH GATE (Netlify Identity — direct API) ──
+const IDENTITY_URL = 'https://curbexusa.com/.netlify/identity';
+
+function doSignIn(e) {
+  e.preventDefault();
+  var email = document.getElementById('lock-email').value;
+  var pw = document.getElementById('lock-pw').value;
+  var btn = document.getElementById('lock-signin-btn');
+  var err = document.getElementById('lock-err');
+  err.textContent = '';
+  btn.textContent = 'Signing in…';
+  btn.disabled = true;
+
+  fetch(IDENTITY_URL + '/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'grant_type=password&username=' + encodeURIComponent(email) + '&password=' + encodeURIComponent(pw)
+  })
+  .then(function(r) {
+    if (!r.ok) throw new Error('Invalid email or password');
+    return r.json();
+  })
+  .then(function(data) {
+    sessionStorage.setItem('curbex-token', data.access_token);
+    document.getElementById('lock-screen').classList.add('hidden');
+  })
+  .catch(function(e) {
+    err.textContent = e.message;
+    btn.textContent = 'Sign In';
+    btn.disabled = false;
+  });
+  return false;
 }
 
-if (typeof netlifyIdentity !== 'undefined') {
-  netlifyIdentity.init({ APIUrl: 'https://curbexusa.com/.netlify/identity' });
+// Handle invite token — confirm the user first
+(function() {
+  var hash = window.location.hash;
+  var match = hash.match(/invite_token=([^&]+)/);
+  if (match) {
+    document.getElementById('lock-err').textContent = 'Setting up your account…';
+    fetch(IDENTITY_URL + '/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: match[1], type: 'invite' })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function() {
+      document.getElementById('lock-err').style.color = '#22c55e';
+      document.getElementById('lock-err').textContent = 'Account confirmed! Enter your email and password to sign in.';
+      window.location.hash = '';
+    })
+    .catch(function() {
+      document.getElementById('lock-err').textContent = 'Invite link expired. Ask your admin for a new invite.';
+    });
+  }
+})();
 
-  netlifyIdentity.on('init', function(user) {
-    if (user) document.getElementById('lock-screen').classList.add('hidden');
-  });
-  netlifyIdentity.on('login', function() {
-    document.getElementById('lock-screen').classList.add('hidden');
-    netlifyIdentity.close();
-  });
-  netlifyIdentity.on('logout', function() {
-    document.getElementById('lock-screen').classList.remove('hidden');
-  });
-  // If already logged in, hide lock screen
-  if (netlifyIdentity.currentUser()) {
-    document.getElementById('lock-screen').classList.add('hidden');
-  }
-  // Auto-open widget if invite/recovery token in URL
-  if (window.location.hash.match(/invite_token|confirmation_token|recovery_token/)) {
-    netlifyIdentity.open();
-  }
-} else {
-  document.getElementById('lock-err').textContent = 'Identity widget failed to load.';
+// Auto-login if token still valid
+if (sessionStorage.getItem('curbex-token')) {
+  document.getElementById('lock-screen').classList.add('hidden');
 }
 </script>
 <script>
@@ -803,7 +835,8 @@ function saveGH() {
 
 // ─── SIGN OUT ─────────────────────────────────────────────────────────────────
 function signOut() {
-  netlifyIdentity.logout();
+  sessionStorage.removeItem('curbex-token');
+  document.getElementById('lock-screen').classList.remove('hidden');
 }
 
 // ─── HOMEPAGE STATE ───────────────────────────────────────────────────────────
