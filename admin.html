@@ -548,8 +548,15 @@
 
 <script>
 // ── AUTH GATE (Netlify Identity) ──
+netlifyIdentity.init({ APIUrl: 'https://curbexusa.com/.netlify/identity' });
+
+netlifyIdentity.on('init', function(user) {
+  if (user) document.getElementById('lock-screen').classList.add('hidden');
+});
 netlifyIdentity.on('login', function() {
   document.getElementById('lock-screen').classList.add('hidden');
+  // Close the widget modal after login
+  netlifyIdentity.close();
 });
 netlifyIdentity.on('logout', function() {
   document.getElementById('lock-screen').classList.remove('hidden');
