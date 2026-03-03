@@ -1848,7 +1848,7 @@ function patchProductHTML(html, s) {
   // Patch title
   if (s.title) html = html.replace(/(<h1 class="product-title">)[^<]*/,`$1${s.title}`);
   if (s.subtitle) html = html.replace(/(<p class="product-subtitle">)[^<]*/,`$1${s.subtitle}`);
-  if (s.price) html = html.replace(/(<h2 class="product-price-heading">)[^<]*/,`$1${s.price}`);
+  if (s.price) html = html.replace(/(<h2 class="product-price-heading">)[\s\S]*?(<\/h2>)/,`$1${s.price}$2`);
 
   // Patch description
   if (s.desc) html = html.replace(/(<div class="desc-box">\s*)[\s\S]*?(\s*<\/div>)/,`$1${s.desc}$2`);
