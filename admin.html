@@ -156,6 +156,7 @@
     .lock-btn:hover{opacity:.88}
     .lock-err{font-size:12px;color:var(--red);margin-top:10px;min-height:18px}
   </style>
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 </head>
 <body>
 
@@ -164,11 +165,8 @@
   <div class="lock-box">
     <div class="lock-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
     <div class="lock-title">Curbex Admin</div>
-    <div class="lock-sub">Enter the admin password to continue</div>
-    <form onsubmit="return checkPassword(event)">
-      <input type="password" class="lock-input" id="lock-pw" placeholder="Password" autofocus/>
-      <button type="submit" class="lock-btn">Sign In</button>
-    </form>
+    <div class="lock-sub">Sign in to continue</div>
+    <button class="lock-btn" onclick="netlifyIdentity.open('login')">Sign In</button>
     <div class="lock-err" id="lock-err"></div>
   </div>
 </div>
@@ -549,30 +547,15 @@
 </div>
 
 <script>
-// ── AUTH GATE ──
-const PW_HASH = '566804d07a08578b802a786a281c0c6bc5cd02ac77abefcbdec69541dadbd677';
-
-async function sha256(str) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
-}
-
-async function checkPassword(e) {
-  e.preventDefault();
-  const pw = document.getElementById('lock-pw').value;
-  const hash = await sha256(pw);
-  if (hash === PW_HASH) {
-    sessionStorage.setItem('curbex-auth', '1');
-    document.getElementById('lock-screen').classList.add('hidden');
-  } else {
-    document.getElementById('lock-err').textContent = 'Incorrect password';
-    document.getElementById('lock-pw').value = '';
-    document.getElementById('lock-pw').focus();
-  }
-  return false;
-}
-
-if (sessionStorage.getItem('curbex-auth') === '1') {
+// ── AUTH GATE (Netlify Identity) ──
+netlifyIdentity.on('login', function() {
+  document.getElementById('lock-screen').classList.add('hidden');
+});
+netlifyIdentity.on('logout', function() {
+  document.getElementById('lock-screen').classList.remove('hidden');
+});
+// If already logged in, hide lock screen
+if (netlifyIdentity.currentUser()) {
   document.getElementById('lock-screen').classList.add('hidden');
 }
 </script>
@@ -797,8 +780,7 @@ function saveGH() {
 
 // ─── SIGN OUT ─────────────────────────────────────────────────────────────────
 function signOut() {
-  sessionStorage.removeItem('curbex-auth');
-  document.getElementById('lock-screen').classList.remove('hidden');
+  netlifyIdentity.logout();
 }
 
 // ─── HOMEPAGE STATE ───────────────────────────────────────────────────────────
