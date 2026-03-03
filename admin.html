@@ -586,28 +586,112 @@ function doSignIn(e) {
   return false;
 }
 
-// Handle invite token — confirm the user first
+// Handle invite or recovery token
 (function() {
   var hash = window.location.hash;
-  var match = hash.match(/invite_token=([^&]+)/);
-  if (match) {
+
+  // Invite token — confirm account
+  var inviteMatch = hash.match(/invite_token=([^&]+)/);
+  if (inviteMatch) {
     document.getElementById('lock-err').textContent = 'Setting up your account…';
     fetch(IDENTITY_URL + '/verify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: match[1], type: 'invite' })
+      body: JSON.stringify({ token: inviteMatch[1], type: 'invite' })
     })
     .then(function(r) { return r.json(); })
     .then(function() {
       document.getElementById('lock-err').style.color = '#22c55e';
-      document.getElementById('lock-err').textContent = 'Account confirmed! Enter your email and password to sign in.';
+      document.getElementById('lock-err').textContent = 'Account confirmed! Now request a password reset below.';
+      // Show a "Send reset email" helper
+      var box = document.querySelector('.lock-box');
+      var resetDiv = document.createElement('div');
+      resetDiv.style.marginTop = '16px';
+      resetDiv.innerHTML = '<input type="email" class="lock-input" id="reset-email" placeholder="Your email" style="margin-bottom:10px"/>'
+        + '<button class="lock-btn" style="background:transparent;border:2px solid var(--accent);color:var(--accent)" onclick="sendReset()">Send Password Reset Email</button>';
+      box.appendChild(resetDiv);
       window.location.hash = '';
     })
     .catch(function() {
       document.getElementById('lock-err').textContent = 'Invite link expired. Ask your admin for a new invite.';
     });
+    return;
+  }
+
+  // Recovery token — show set password form
+  var recoveryMatch = hash.match(/recovery_token=([^&]+)/);
+  if (recoveryMatch) {
+    var token = recoveryMatch[1];
+    document.getElementById('lock-err').textContent = 'Verifying recovery link…';
+    fetch(IDENTITY_URL + '/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: token, type: 'recovery' })
+    })
+    .then(function(r) {
+      if (!r.ok) throw new Error('Recovery link expired');
+      return r.json();
+    })
+    .then(function(data) {
+      var accessToken = data.access_token;
+      // Replace login form with set-password form
+      var box = document.querySelector('.lock-box');
+      box.querySelector('form').innerHTML =
+        '<input type="password" class="lock-input" id="new-pw" placeholder="New password" style="margin-bottom:10px" required/>'
+        + '<input type="password" class="lock-input" id="confirm-pw" placeholder="Confirm password" required/>'
+        + '<button type="submit" class="lock-btn">Set Password</button>';
+      document.getElementById('lock-err').style.color = '#22c55e';
+      document.getElementById('lock-err').textContent = 'Create your password below.';
+      box.querySelector('form').onsubmit = function(e) {
+        e.preventDefault();
+        var pw1 = document.getElementById('new-pw').value;
+        var pw2 = document.getElementById('confirm-pw').value;
+        if (pw1 !== pw2) { document.getElementById('lock-err').style.color = ''; document.getElementById('lock-err').textContent = 'Passwords do not match'; return false; }
+        if (pw1.length < 6) { document.getElementById('lock-err').style.color = ''; document.getElementById('lock-err').textContent = 'Password must be at least 6 characters'; return false; }
+        fetch(IDENTITY_URL + '/user', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + accessToken },
+          body: JSON.stringify({ password: pw1 })
+        })
+        .then(function(r) {
+          if (!r.ok) throw new Error('Failed to set password');
+          document.getElementById('lock-err').style.color = '#22c55e';
+          document.getElementById('lock-err').textContent = 'Password set! Signing you in…';
+          sessionStorage.setItem('curbex-token', accessToken);
+          setTimeout(function() { document.getElementById('lock-screen').classList.add('hidden'); }, 1000);
+        })
+        .catch(function(err) {
+          document.getElementById('lock-err').style.color = '';
+          document.getElementById('lock-err').textContent = err.message;
+        });
+        return false;
+      };
+      window.location.hash = '';
+    })
+    .catch(function() {
+      document.getElementById('lock-err').textContent = 'Recovery link expired. Request a new one below.';
+    });
+    return;
   }
 })();
+
+// Send password reset email
+function sendReset() {
+  var email = document.getElementById('reset-email').value;
+  if (!email) return;
+  fetch(IDENTITY_URL + '/recover', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email })
+  })
+  .then(function() {
+    document.getElementById('lock-err').style.color = '#22c55e';
+    document.getElementById('lock-err').textContent = 'Password reset email sent! Check your inbox.';
+  })
+  .catch(function() {
+    document.getElementById('lock-err').textContent = 'Failed to send reset email.';
+  });
+}
 
 // Auto-login if token still valid
 if (sessionStorage.getItem('curbex-token')) {
