@@ -1,2 +1,0 @@
-# Protect admin panel — requires Netlify Identity with "admin" role
-/admin.html  /admin.html  200!  Role=admin
