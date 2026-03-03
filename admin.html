@@ -1859,7 +1859,7 @@ function patchProductHTML(html, s) {
       const svg = '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>';
       return `      <div class="spec">${svg}<div><div class="spec-label">${sp.label}</div><div class="spec-value">${sp.value}</div></div></div>`;
     }).join('\n');
-    html = html.replace(/(<div class="specs">)[\s\S]*?(<\/div>)/,`$1\n${newSpecs}\n    $2`);
+    html = html.replace(/<div class="specs">[\s\S]*?<\/div>\s*(?=<div class="features">)/,`<div class="specs">\n${newSpecs}\n    </div>\n    `);
   }
 
   // Patch features
