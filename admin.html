@@ -480,12 +480,32 @@
             <input type="text" id="site-address" placeholder="e.g. Dallas Fort Worth, TX" oninput="updSite('address',this.value)"/>
             <div class="sub">→ "Phone", "Address", and "Email" appear in the "Contact Us" column of the footer</div>
           </div>
-          <div style="display:flex;justify-content:flex-end;margin-top:8px">
-            <button class="btn" style="background:var(--accent);border-color:var(--accent);color:#111;font-weight:700;padding:10px 24px" onclick="saveSite()">
-              Save Site Settings
-            </button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head" style="cursor:default">
+          <div class="card-head-l">
+            <div class="card-icon"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
+            <div><div class="card-name">Tracking Pixels</div><div class="card-note">Meta (Facebook) Pixel and Google Tag for analytics &amp; ads</div></div>
           </div>
         </div>
+        <div class="card-body">
+          <div class="field">
+            <div class="fl">Meta Pixel ID</div>
+            <input type="text" id="site-meta-pixel" placeholder="e.g. 123456789012345" oninput="updSite('metaPixel',this.value)"/>
+            <div class="sub">→ Find in <a href="https://business.facebook.com/events_manager" target="_blank" style="color:var(--accent)">Meta Events Manager</a> → Data Sources → Your Pixel → Settings. Paste just the numeric ID.</div>
+          </div>
+          <div class="field">
+            <div class="fl">Google Tag ID</div>
+            <input type="text" id="site-google-tag" placeholder="e.g. G-XXXXXXXXXX or AW-XXXXXXXXXX" oninput="updSite('googleTag',this.value)"/>
+            <div class="sub">→ Find in <a href="https://ads.google.com" target="_blank" style="color:var(--accent)">Google Ads</a> (AW-...) or <a href="https://analytics.google.com" target="_blank" style="color:var(--accent)">Google Analytics</a> (G-...). Paste the full ID.</div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:8px">
+        <button class="btn" style="background:var(--accent);border-color:var(--accent);color:#111;font-weight:700;padding:10px 24px" onclick="saveSite()">
+          Save Site Settings
+        </button>
       </div>
     </div>
 
@@ -783,6 +803,8 @@ function loadState() {
     document.getElementById('site-email').value    = d.email    || '';
     document.getElementById('site-address').value  = d.address  || '';
     document.getElementById('site-quote-key').value = d.quoteKey || document.getElementById('site-quote-key').value || '';
+    document.getElementById('site-meta-pixel').value = d.metaPixel || '';
+    document.getElementById('site-google-tag').value = d.googleTag || '';
   } else {
     renderLocations(['']);
   }
@@ -900,6 +922,22 @@ function patchFooter(html, s) {
 function patchQuoteKey(html, key) {
   if (!key) return html;
   return html.replace(/(<input[^>]*name="access_key"[^>]*value=")[^"]*(")/g, '$1' + key + '$2');
+}
+
+function patchTrackingPixels(html, s) {
+  html = html.replace(/\n<!-- Meta Pixel -->[^]*?<!-- End Meta Pixel -->\n/g, '');
+  html = html.replace(/\n<!-- Google Tag -->[^]*?<!-- End Google Tag -->\n/g, '');
+  var inject = '';
+  if (s.metaPixel && s.metaPixel.trim()) {
+    var p = s.metaPixel.trim();
+    inject += "\n<!-- Meta Pixel -->\n<script>\n!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','" + p + "');fbq('track','PageView');\n<\/script>\n<noscript><img height=\"1\" width=\"1\" style=\"display:none\" src=\"https://www.facebook.com/tr?id=" + p + "&ev=PageView&noscript=1\"/></noscript>\n<!-- End Meta Pixel -->";
+  }
+  if (s.googleTag && s.googleTag.trim()) {
+    var g = s.googleTag.trim();
+    inject += "\n<!-- Google Tag -->\n<script async src=\"https://www.googletagmanager.com/gtag/js?id=" + g + "\"><\/script>\n<script>\nwindow.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','" + g + "');\n<\/script>\n<!-- End Google Tag -->";
+  }
+  if (inject) html = html.replace('</head>', inject + '\n</head>');
+  return html;
 }
 
 function saveState() {
@@ -1808,11 +1846,12 @@ async function publishAll() {
   const cpState = getCarouselPricing();
   const hasHpChanges = hpState && Object.keys(hpState).length > 0;
   const hasCpChanges = cpState && Object.keys(cpState).length > 0;
+  const hasPixels = !!(siteSettings.metaPixel || siteSettings.googleTag);
 
-  logLine(`State — Footer: ${hasFooter}, Homepage: ${hasHpChanges}, Carousel: ${hasCpChanges}`);
+  logLine(`State — Footer: ${hasFooter}, Homepage: ${hasHpChanges}, Carousel: ${hasCpChanges}, Pixels: ${hasPixels}`);
 
   // ── index.html ──
-  if (hasFooter || hasHpChanges || hasCpChanges) {
+  if (hasFooter || hasHpChanges || hasCpChanges || hasPixels) {
     logLine('⟳ Updating index.html…', 'spin');
     try {
       let html = await fetchFileContent(token, owner, repo, branch, 'index.html');
@@ -1833,6 +1872,7 @@ async function publishAll() {
         html = patchCarouselPricing(html, cpState);
         console.log(`[publishAll] After patchCarouselPricing: ${html.length} chars (changed: ${html.length !== beforePatch})`);
       }
+      if (hasPixels) html = patchTrackingPixels(html, siteSettings);
       console.log(`[publishAll] Total content change: ${html.length - originalLength} chars`);
       await publishFile('index.html', html, token, owner, repo, branch);
       logLine('✓ index.html updated', 'ok');
@@ -1848,7 +1888,7 @@ async function publishAll() {
   for (const prod of PRODUCTS) {
     const s = state[prod.id];
     const hasEdits = s && Object.keys(s).length > 0;
-    if (!hasFooter && !hasEdits) {
+    if (!hasFooter && !hasEdits && !hasPixels) {
       logLine(`⏭ ${prod.name} — no changes, skipping`);
       continue;
     }
@@ -1858,6 +1898,7 @@ async function publishAll() {
       if (hasFooter) html = patchFooter(html, siteSettings);
       if (siteSettings.quoteKey) html = patchQuoteKey(html, siteSettings.quoteKey);
       if (hasEdits) html = patchProductHTML(html, s);
+      if (hasPixels) html = patchTrackingPixels(html, siteSettings);
       await publishFile(prod.file, html, token, owner, repo, branch);
       logLine(`✓ ${prod.name} updated`, 'ok');
     } catch(e) {
