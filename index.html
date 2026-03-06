@@ -683,8 +683,8 @@ function submitQuote(form) {
   .then(function(data) {
     if (data.success) {
       if(typeof fbq==='function') fbq('track','Lead');
-      if(typeof gtag==='function') gtag('event','conversion',{'send_to':'AW-17992633059/V0I8CIjp6IIcE00Vx4ND','value':1.0,'currency':'USD'});
-      setTimeout(function(){ form.innerHTML = '<div style="text-align:center;padding:32px 0"><h3 style="color:#22c55e;margin-bottom:8px">Thank you!</h3><p>We\'ll be in touch shortly.</p></div>'; }, 500);
+      if(typeof gtag==='function') gtag('event','conversion',{'send_to':'AW-17992633059/V0I8CIjp6IIcE00Vx4ND','value':1.0,'currency':'USD','transport_type':'beacon','event_callback':function(){console.log('Google Ads conversion sent');}});
+      setTimeout(function(){ form.innerHTML = '<div style="text-align:center;padding:32px 0"><h3 style="color:#22c55e;margin-bottom:8px">Thank you!</h3><p>We\'ll be in touch shortly.</p></div>'; }, 1000);
     } else {
       btn.textContent = origText;
       btn.disabled = false;
