@@ -496,9 +496,14 @@
             <div class="sub">→ Find in <a href="https://business.facebook.com/events_manager" target="_blank" style="color:var(--accent)">Meta Events Manager</a> → Data Sources → Your Pixel → Settings. Paste just the numeric ID.</div>
           </div>
           <div class="field">
-            <div class="fl">Google Tag ID</div>
-            <input type="text" id="site-google-tag" placeholder="e.g. G-XXXXXXXXXX or AW-XXXXXXXXXX" oninput="updSite('googleTag',this.value)"/>
-            <div class="sub">→ Find in <a href="https://ads.google.com" target="_blank" style="color:var(--accent)">Google Ads</a> (AW-...) or <a href="https://analytics.google.com" target="_blank" style="color:var(--accent)">Google Analytics</a> (G-...). Paste the full ID.</div>
+            <div class="fl">Google Analytics ID</div>
+            <input type="text" id="site-google-analytics" placeholder="e.g. G-XXXXXXXXXX" oninput="updSite('googleAnalytics',this.value)"/>
+            <div class="sub">→ Find in <a href="https://analytics.google.com" target="_blank" style="color:var(--accent)">Google Analytics</a> → Admin → Data Streams. Paste the Measurement ID (G-...).</div>
+          </div>
+          <div class="field">
+            <div class="fl">Google Ads ID</div>
+            <input type="text" id="site-google-ads" placeholder="e.g. AW-XXXXXXXXXX" oninput="updSite('googleAds',this.value)"/>
+            <div class="sub">→ Find in <a href="https://ads.google.com" target="_blank" style="color:var(--accent)">Google Ads</a> → Tools → Conversions. Paste the Tag ID (AW-...).</div>
           </div>
         </div>
       </div>
@@ -804,7 +809,8 @@ function loadState() {
     document.getElementById('site-address').value  = d.address  || '';
     document.getElementById('site-quote-key').value = d.quoteKey || document.getElementById('site-quote-key').value || '';
     document.getElementById('site-meta-pixel').value = d.metaPixel || '';
-    document.getElementById('site-google-tag').value = d.googleTag || '';
+    document.getElementById('site-google-analytics').value = d.googleAnalytics || d.googleTag || '';
+    document.getElementById('site-google-ads').value = d.googleAds || '';
   } else {
     renderLocations(['']);
   }
@@ -932,9 +938,13 @@ function patchTrackingPixels(html, s) {
     var p = s.metaPixel.trim().replace(/[^0-9]/g, '');
     inject += "\n<!-- Meta Pixel -->\n<script>\n!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','" + p + "');fbq('track','PageView');\n<\/script>\n<noscript><img height=\"1\" width=\"1\" style=\"display:none\" src=\"https://www.facebook.com/tr?id=" + p + "&ev=PageView&noscript=1\"/></noscript>\n<!-- End Meta Pixel -->";
   }
-  if (s.googleTag && s.googleTag.trim()) {
-    var g = s.googleTag.trim().replace(/[^A-Za-z0-9\-]/g, '');
-    inject += "\n<!-- Google Tag -->\n<script async src=\"https://www.googletagmanager.com/gtag/js?id=" + g + "\"><\/script>\n<script>\nwindow.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','" + g + "');\n<\/script>\n<!-- End Google Tag -->";
+  var ga = (s.googleAnalytics || s.googleTag || '').trim().replace(/[^A-Za-z0-9\-]/g, '');
+  var gads = (s.googleAds || '').trim().replace(/[^A-Za-z0-9\-]/g, '');
+  var primaryG = ga || gads;
+  if (primaryG) {
+    var configs = "gtag('config','" + primaryG + "');";
+    if (ga && gads) configs += "\ngtag('config','" + gads + "');";
+    inject += "\n<!-- Google Tag -->\n<script async src=\"https://www.googletagmanager.com/gtag/js?id=" + primaryG + "\"><\/script>\n<script>\nwindow.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());\n" + configs + "\n<\/script>\n<!-- End Google Tag -->";
   }
   if (inject) html = html.replace('</head>', inject + '\n</head>');
   return html;
@@ -1846,7 +1856,7 @@ async function publishAll() {
   const cpState = getCarouselPricing();
   const hasHpChanges = hpState && Object.keys(hpState).length > 0;
   const hasCpChanges = cpState && Object.keys(cpState).length > 0;
-  const hasPixels = !!(siteSettings.metaPixel || siteSettings.googleTag);
+  const hasPixels = !!(siteSettings.metaPixel || siteSettings.googleAnalytics || siteSettings.googleAds || siteSettings.googleTag);
 
   logLine(`State — Footer: ${hasFooter}, Homepage: ${hasHpChanges}, Carousel: ${hasCpChanges}, Pixels: ${hasPixels}`);
 
