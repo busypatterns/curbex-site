@@ -339,8 +339,11 @@ gtag('config','AW-17992633059');
           <label for="email">Email <span class="req">*</span></label>
           <input type="email" id="email" name="email" placeholder="you@company.com" required/>
         </div>
+        <label style="display:flex;align-items:flex-start;gap:8px;margin-top:12px;cursor:pointer;">
+          <input type="checkbox" name="sms_consent" value="yes" required style="margin-top:3px;flex-shrink:0;"/>
+          <span style="font-size:0.68rem;color:#888;line-height:1.4;">I agree to receive text messages from Curbex USA. Message frequency varies. Msg &amp; data rates may apply. Reply STOP to opt out, HELP for help. View our <a href="#" onclick="event.preventDefault();document.getElementById('privacy-modal').classList.add('open');" style="color:#888;text-decoration:underline;">Privacy Policy</a>.</span>
+        </label>
         <button type="submit" class="btn btn-yellow form-submit">Request a Quote</button>
-        <p style="font-size:0.68rem;color:#888;line-height:1.4;margin-top:10px;">By submitting this form, you consent to receive text messages from Curbex USA. Message frequency varies. Msg &amp; data rates may apply. Reply STOP to opt out. Reply HELP for help.</p>
       </form>
     </div>
 
