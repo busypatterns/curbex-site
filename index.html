@@ -226,6 +226,14 @@
     .qm-body{overflow-y:auto;padding:24px 28px;flex:1}
     .qm-body .form-row{flex-direction:column}
 
+    /* ADDRESS AUTOCOMPLETE */
+    .addr-wrap{position:relative}
+    .addr-list{display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #E0E0E0;border-top:none;border-radius:0 0 8px 8px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:10;max-height:200px;overflow-y:auto;margin-top:-1px}
+    .addr-list.show{display:block}
+    .addr-item{padding:10px 12px;font-size:13px;color:#333;cursor:pointer;border-bottom:1px solid #f0f0f0}
+    .addr-item:last-child{border-bottom:none}
+    .addr-item:hover,.addr-item:focus{background:#FFF8E1}
+
     /* PRIVACY MODAL */
     #privacy-modal{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:24px}
     #privacy-modal.open{display:flex}
@@ -345,9 +353,10 @@ gtag('config','AW-17992633059');
             <input type="tel" id="phone" name="phone" placeholder="(555) 000-0000" required/>
           </div>
         </div>
-        <div class="form-group full">
+        <div class="form-group full addr-wrap">
           <label for="address">Street Address <span class="req">*</span></label>
-          <input type="text" id="address" name="address" placeholder="123 Main St, Dallas, TX" autocomplete="street-address" required/>
+          <input type="text" id="address" name="address" placeholder="123 Main St, Dallas, TX" autocomplete="off" required/>
+          <div class="addr-list" id="addr-list-desktop"></div>
         </div>
 
         <div class="form-group full">
@@ -390,9 +399,10 @@ gtag('config','AW-17992633059');
             <input type="tel" id="m-phone" name="phone" placeholder="(555) 000-0000" required/>
           </div>
         </div>
-        <div class="form-group full">
+        <div class="form-group full addr-wrap">
           <label for="m-address">Street Address <span class="req">*</span></label>
-          <input type="text" id="m-address" name="address" placeholder="123 Main St, Dallas, TX" autocomplete="street-address" required/>
+          <input type="text" id="m-address" name="address" placeholder="123 Main St, Dallas, TX" autocomplete="off" required/>
+          <div class="addr-list" id="addr-list-modal"></div>
         </div>
         <div class="form-group full">
           <label for="m-email">Email <span class="req">*</span></label>
@@ -726,6 +736,59 @@ gtag('config','AW-17992633059');
 </div>
 
 <script>
+/* Address autocomplete using Photon (OpenStreetMap) */
+(function(){
+  var DEBOUNCE=300;
+  function setupAddr(inputId,listId){
+    var input=document.getElementById(inputId);
+    var list=document.getElementById(listId);
+    if(!input||!list)return;
+    var timer;
+    input.addEventListener('input',function(){
+      clearTimeout(timer);
+      var q=input.value.trim();
+      if(q.length<3){list.innerHTML='';list.classList.remove('show');return;}
+      timer=setTimeout(function(){
+        fetch('https://photon.komoot.io/api/?q='+encodeURIComponent(q)+'&limit=5&lang=en&lat=32.78&lon=-96.80&osm_tag=place&osm_tag=highway&layer=house&layer=street')
+        .then(function(r){return r.json();})
+        .then(function(data){
+          list.innerHTML='';
+          if(!data.features||!data.features.length){list.classList.remove('show');return;}
+          data.features.forEach(function(f){
+            var p=f.properties;
+            var parts=[];
+            if(p.housenumber&&p.street)parts.push(p.housenumber+' '+p.street);
+            else if(p.street)parts.push(p.street);
+            else if(p.name)parts.push(p.name);
+            if(p.city)parts.push(p.city);
+            if(p.state)parts.push(p.state);
+            if(p.postcode)parts.push(p.postcode);
+            if(!parts.length)return;
+            var div=document.createElement('div');
+            div.className='addr-item';
+            div.textContent=parts.join(', ');
+            div.addEventListener('click',function(){
+              input.value=parts.join(', ');
+              list.innerHTML='';
+              list.classList.remove('show');
+            });
+            list.appendChild(div);
+          });
+          list.classList.add('show');
+        })
+        .catch(function(){});
+      },DEBOUNCE);
+    });
+    document.addEventListener('click',function(e){
+      if(!input.contains(e.target)&&!list.contains(e.target)){
+        list.classList.remove('show');
+      }
+    });
+  }
+  setupAddr('address','addr-list-desktop');
+  setupAddr('m-address','addr-list-modal');
+})();
+
 function submitQuote(form) {
   var btn = form.querySelector('.form-submit') || form.querySelector('.btn-quote');
   var origText = btn.textContent;
