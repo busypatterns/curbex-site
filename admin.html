@@ -292,7 +292,7 @@
         <div class="card-body">
           <div class="field">
             <div class="fl">Hero Headline</div>
-            <input type="text" id="hp-hero-heading" placeholder="Rent a sign in Dallas Fort Worth" oninput="updHomepage('heroHeading',this.value)"/>
+            <input type="text" id="hp-hero-heading" placeholder="Rent a sign in Dallas–Fort Worth" oninput="updHomepage('heroHeading',this.value)"/>
             <div class="sub">→ The large h1 heading at the top of the page. Use &lt;br&gt; for line breaks.</div>
           </div>
           <div class="field">
@@ -331,7 +331,7 @@
             </div>
             <div class="field">
               <div class="fl">Use Cases — Heading</div>
-              <input type="text" id="hp-usecases-heading" placeholder="Built for Dallas Fort Worth businesses" oninput="updHomepage('usecasesHeading',this.value)"/>
+              <input type="text" id="hp-usecases-heading" placeholder="Built for Dallas–Fort Worth businesses" oninput="updHomepage('usecasesHeading',this.value)"/>
             </div>
           </div>
           <div class="g2">
@@ -460,11 +460,6 @@
             </button>
             <div class="sub" style="margin-top:8px">→ Each entry appears as a line in the "Locations" column of the footer on every page</div>
           </div>
-          <div class="field">
-            <div class="fl">Quote Form — Web3Forms Access Key</div>
-            <input type="text" id="site-quote-key" value="fe2deaad-90b4-4bf1-8781-9017dccdfb78" placeholder="paste your access key here" oninput="updSite('quoteKey',this.value)"/>
-            <div class="sub">→ Go to <a href="https://web3forms.com" target="_blank" style="color:var(--accent)">web3forms.com</a>, enter the email you want quotes sent to, and paste the access key here. All "Get a Quote" forms will send to that email.</div>
-          </div>
           <div class="g2">
             <div class="field">
               <div class="fl">Phone</div>
@@ -477,7 +472,7 @@
           </div>
           <div class="field">
             <div class="fl">Address</div>
-            <input type="text" id="site-address" placeholder="e.g. Dallas Fort Worth, TX" oninput="updSite('address',this.value)"/>
+            <input type="text" id="site-address" placeholder="e.g. Dallas–Fort Worth, TX" oninput="updSite('address',this.value)"/>
             <div class="sub">→ "Phone", "Address", and "Email" appear in the "Contact Us" column of the footer</div>
           </div>
         </div>
@@ -807,7 +802,6 @@ function loadState() {
     document.getElementById('site-phone').value    = d.phone    || '';
     document.getElementById('site-email').value    = d.email    || '';
     document.getElementById('site-address').value  = d.address  || '';
-    document.getElementById('site-quote-key').value = d.quoteKey || document.getElementById('site-quote-key').value || '';
     document.getElementById('site-meta-pixel').value = d.metaPixel || '';
     document.getElementById('site-google-analytics').value = d.googleAnalytics || d.googleTag || '';
     document.getElementById('site-google-ads').value = d.googleAds || '';
@@ -925,10 +919,6 @@ function patchFooter(html, s) {
   return html;
 }
 
-function patchQuoteKey(html, key) {
-  if (!key) return html;
-  return html.replace(/(<input[^>]*name="access_key"[^>]*value=")[^"]*(")/g, '$1' + key + '$2');
-}
 
 function patchTrackingPixels(html, s) {
   html = html.replace(/\n<!-- Meta Pixel -->[^]*?<!-- End Meta Pixel -->\n/g, '');
@@ -985,7 +975,7 @@ function updHomepage(key, val) {
 }
 
 const HP_DEFAULT_QUESTIONS = [
-  { q:'Where can the sign be placed?', a:'Signs can be placed at permitted roadside locations with high visibility across the Dallas Fort Worth metro area.' },
+  { q:'Where can the sign be placed?', a:'Signs can be placed at permitted roadside locations with high visibility across the Dallas–Fort Worth metro area.' },
   { q:'How quickly can my sign be installed?', a:'Most installations happen within 3–5 business days of order confirmation, depending on location and permitting.' },
   { q:'Can I change my ad mid-rental?', a:'Yes. You can update your creative at any time during the rental period. We handle printing and swaps.' },
   { q:"What's included in the price?", a:'All rentals include the sign unit, installation, removal, permitting, and one printed panel.' }
@@ -1396,7 +1386,7 @@ function buildPanel(prod) {
         <div class="field">
           <div class="fl">Specs <span style="font-size:11px;color:var(--muted);text-transform:none;letter-spacing:0;font-weight:400">(label : value)</span></div>
           <div id="${prod.id}-specs-wrap"></div>
-          <div class="sub" style="margin-bottom:8px">→ The 3 icon boxes beside the product image — e.g. <em>Sign Height / 5' (h)</em>, <em>Digital Print / Full colour</em></div>
+          <div class="sub" style="margin-bottom:8px">→ The 3 icon boxes beside the product image — e.g. <em>Sign Height / 5' (h)</em>, <em>Digital Print / Full color</em></div>
           <button class="btn" onclick="addSpec('${prod.id}')">
             <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Add spec
@@ -1450,6 +1440,20 @@ function buildPanel(prod) {
       </div>
     </div>
 
+    <!-- PHOTO STRIP & FAQ IMAGE -->
+    <div class="card">
+      <div class="card-head" onclick="toggleCard(this)">
+        <div class="card-head-l">
+          <div class="card-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+          <div><div class="card-name">Photo Strip &amp; FAQ Image</div><div class="card-note">The sidebar image next to FAQs and the 4-photo strip below it</div></div>
+        </div>
+        <div class="caret open"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+      </div>
+      <div class="card-body">
+        <div id="strip-imgs-${prod.id}" class="img-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px"></div>
+      </div>
+    </div>
+
     <!-- SAVE -->
     <div style="display:flex;justify-content:flex-end;margin-top:4px">
       <button class="btn" style="background:var(--accent);border-color:var(--accent);color:#111;font-weight:700;padding:10px 24px" onclick="saveProd('${prod.id}')">
@@ -1460,6 +1464,7 @@ function buildPanel(prod) {
 
   // Render dynamic bits
   renderImages(prod.id);
+  renderStripImages(prod.id);
   renderSpecs(prod.id);
   renderTags(prod.id);
   renderFAQs(prod.id);
@@ -1510,6 +1515,54 @@ async function handleImgFile(pid, idx, file) {
     toast('Photo uploaded ✓', 'ok');
   } catch(e) {
     console.error('[handleImgFile]', e);
+    toast('Upload failed: ' + e.message, 'err');
+  }
+}
+
+// ─── PHOTO STRIP & FAQ IMAGE ──────────────────────────────────────────────────
+function renderStripImages(pid) {
+  const s = state[pid] || {};
+  const imgs = s.stripImages || ['','','','',''];
+  const wrap = document.getElementById('strip-imgs-' + pid);
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  const labels = ['FAQ sidebar image', 'Photo strip 1', 'Photo strip 2', 'Photo strip 3', 'Photo strip 4'];
+  imgs.forEach((src, i) => {
+    const slot = document.createElement('div');
+    slot.className = 'img-slot' + (src ? ' filled' : '');
+    slot.style.cssText = 'aspect-ratio:1;border-radius:8px;cursor:pointer;overflow:hidden;position:relative;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;flex-direction:column';
+    if (src) {
+      slot.style.borderStyle = 'solid';
+      slot.innerHTML = '<img src="' + getImagePreviewUrl(src) + '" alt="" style="width:100%;height:100%;object-fit:cover" draggable="false"/><div class="img-ov"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span>' + labels[i] + '</span></div>';
+    } else {
+      slot.innerHTML = '<svg class="img-empty-icon" viewBox="0 0 24 24" style="width:32px;height:32px;stroke:var(--muted);fill:none;stroke-width:1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><div style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center">' + labels[i] + '</div>';
+    }
+    const fi = document.createElement('input');
+    fi.type = 'file'; fi.accept = 'image/*'; fi.style.display = 'none';
+    fi.onchange = () => { if (fi.files[0]) handleStripImgFile(pid, i, fi.files[0]); };
+    slot.onclick = () => fi.click();
+    wrap.appendChild(slot);
+    wrap.appendChild(fi);
+  });
+}
+
+async function handleStripImgFile(pid, idx, file) {
+  if (!file) return;
+  toast('Uploading…', 'ok');
+  try {
+    const dataUrl = await readFileAsBase64(file);
+    const ext = getFileExt(file);
+    const slotNames = ['faq', 'strip-0', 'strip-1', 'strip-2', 'strip-3'];
+    const path = await uploadImageToGitHub(dataUrl, `images/product-${pid}-${slotNames[idx]}.${ext}`);
+    _previewCache[path] = dataUrl;
+    if (!state[pid]) state[pid] = {};
+    if (!state[pid].stripImages) state[pid].stripImages = ['','','','',''];
+    state[pid].stripImages[idx] = path;
+    saveState();
+    renderStripImages(pid);
+    toast('Photo uploaded ✓', 'ok');
+  } catch(e) {
+    console.error('[handleStripImgFile]', e);
     toast('Upload failed: ' + e.message, 'err');
   }
 }
@@ -1871,7 +1924,6 @@ async function publishAll() {
         html = patchFooter(html, siteSettings);
         console.log(`[publishAll] After patchFooter: ${html.length} chars (changed: ${html.length !== originalLength})`);
       }
-      if (siteSettings.quoteKey) html = patchQuoteKey(html, siteSettings.quoteKey);
       if (hasHpChanges) {
         const beforePatch = html.length;
         html = patchHomepage(html, hpState);
@@ -1898,7 +1950,7 @@ async function publishAll() {
   for (const prod of PRODUCTS) {
     const s = state[prod.id];
     const hasEdits = s && Object.keys(s).length > 0;
-    if (!hasFooter && !hasEdits && !hasPixels) {
+    if (!hasFooter && !hasEdits && !hasPixels && !hasCpChanges) {
       logLine(`⏭ ${prod.name} — no changes, skipping`);
       continue;
     }
@@ -1906,8 +1958,8 @@ async function publishAll() {
     try {
       let html = await fetchFileContent(token, owner, repo, branch, prod.file);
       if (hasFooter) html = patchFooter(html, siteSettings);
-      if (siteSettings.quoteKey) html = patchQuoteKey(html, siteSettings.quoteKey);
       if (hasEdits) html = patchProductHTML(html, s);
+      if (hasCpChanges) html = patchAlsoLikeCards(html, cpState);
       if (hasPixels) html = patchTrackingPixels(html, siteSettings);
       await publishFile(prod.file, html, token, owner, repo, branch);
       logLine(`✓ ${prod.name} updated`, 'ok');
@@ -2015,6 +2067,29 @@ function patchCarouselPricing(html, cp) {
   return html;
 }
 
+// Patches "You might also like" card images on product pages to match carousel images
+function patchAlsoLikeCards(html, cp) {
+  const nameMap = {
+    'pedestal': 'Pedestal', 'mini-b': 'Mini B', '4x4': '4\u00d74',
+    'ad-panel': 'Ad Panel', 'cube-pod': 'Cube Pod',
+  };
+  // Also match non-unicode alt text
+  const altMap = {
+    'pedestal': 'Pedestal', 'mini-b': 'Mini B', '4x4': '4x4',
+    'ad-panel': 'Ad Panel', 'cube-pod': 'Cube Pod',
+  };
+  for (const [pid, cfg] of Object.entries(cp)) {
+    if (!cfg.image) continue;
+    // Match card-img for both unicode and plain alt text variants
+    for (const alt of [nameMap[pid], altMap[pid]]) {
+      if (!alt) continue;
+      const re = new RegExp('(<div class="card-img"><img src=")[^"]*(" alt="' + alt.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '")', 'g');
+      html = html.replace(re, '$1' + cfg.image + '$2');
+    }
+  }
+  return html;
+}
+
 // ─── PRODUCT HTML PATCHER ──────────────────────────────────────────────────────
 // Patches product HTML with admin edits (content already fetched)
 function patchProductHTML(html, s) {
@@ -2075,6 +2150,19 @@ function patchProductHTML(html, s) {
       }
       idx++;
     }
+  }
+
+  // Patch FAQ sidebar image and photo strip
+  if (s.stripImages) {
+    if (s.stripImages[0]) {
+      html = html.replace(/(<div class="faq-image"><img src=")[^"]*(")/,`$1${s.stripImages[0]}$2`);
+    }
+    let stripIdx = 0;
+    html = html.replace(/(<div class="photo-strip-item"><img src=")[^"]*(")/g, (match, p1, p2) => {
+      stripIdx++;
+      const src = s.stripImages[stripIdx];
+      return src ? `${p1}${src}${p2}` : match;
+    });
   }
 
   return html;

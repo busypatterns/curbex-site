@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Curbex | Portable Sign Rental in Dallas Fort Worth</title>
-  <meta name="description" content="Rent a portable roadside sign in Dallas Fort Worth from $10/day. Fully managed — permits, printing, and installation included." />
+  <title>Curbex | Portable Sign Rental in Dallas–Fort Worth</title>
+  <meta name="description" content="Rent a portable roadside sign in Dallas–Fort Worth from $10/day. Fully managed — permits, printing, and installation included." />
   <link rel="canonical" href="/" />
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="Curbex | Portable Sign Rental in Dallas Fort Worth" />
+  <meta property="og:title" content="Curbex | Portable Sign Rental in Dallas–Fort Worth" />
   <meta property="og:description" content="Fully managed portable sign rental from $10/day. Permits, printing & installation included." />
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"LocalBusiness","name":"Curbex","email":"[email@placeholder.com]","address":{"@type":"PostalAddress","streetAddress":"111 Caplan","addressRegion":"TX","addressCountry":"US"},"areaServed":{"@type":"City","name":"Dallas Fort Worth"}}</script>
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Where can the sign be placed?","acceptedAnswer":{"@type":"Answer","text":"Signs can be placed at permitted roadside locations with high visibility across the Dallas Fort Worth metro area."}},{"@type":"Question","name":"How quickly can my sign be installed?","acceptedAnswer":{"@type":"Answer","text":"Most installations happen within 3-5 business days of order confirmation."}},{"@type":"Question","name":"Can I change my ad mid-rental?","acceptedAnswer":{"@type":"Answer","text":"Yes. You can update your creative at any time during the rental period."}},{"@type":"Question","name":"What is included in the price?","acceptedAnswer":{"@type":"Answer","text":"All rentals include the sign unit, installation, removal, permitting, and one printed panel."}}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"LocalBusiness","name":"Curbex","email":"signs@curbexusa.com","telephone":"(817) 587-2570","address":{"@type":"PostalAddress","streetAddress":"5045 Saunders Road, Suite 161","addressLocality":"Fort Worth","addressRegion":"TX","postalCode":"76119","addressCountry":"US"},"areaServed":{"@type":"City","name":"Dallas–Fort Worth"}}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Where can the sign be placed?","acceptedAnswer":{"@type":"Answer","text":"Signs can be placed at permitted roadside locations with high visibility across the Dallas–Fort Worth metro area."}},{"@type":"Question","name":"How quickly can my sign be installed?","acceptedAnswer":{"@type":"Answer","text":"Most installations happen within 3-5 business days of order confirmation."}},{"@type":"Question","name":"Can I change my ad mid-rental?","acceptedAnswer":{"@type":"Answer","text":"Yes. You can update your creative at any time during the rental period."}},{"@type":"Question","name":"What is included in the price?","acceptedAnswer":{"@type":"Answer","text":"All rentals include the sign unit, installation, removal, permitting, and one printed panel."}}]}</script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -59,7 +59,7 @@
       margin:0 auto;
       padding:48px 40px 60px;
       display:flex;
-      align-items:flex-start;
+      align-items:flex-end;
       gap:60px;
     }
     .hero-left{
@@ -83,12 +83,10 @@
       border-radius:20px;
       overflow:hidden;
       background:#EEF4FF;
-      min-height:380px;
     }
     .hero-right img{
       width:100%;
-      height:420px;
-      object-fit:cover;
+      height:auto;
       display:block;
     }
 
@@ -112,8 +110,8 @@
     .how-right img{width:100%;height:480px;object-fit:cover;border-radius:20px}
 
     /* BANNER */
-    #banner{position:relative;height:420px;overflow:hidden;background:#111}
-    #banner img{width:100%;height:100%;object-fit:cover;opacity:.72}
+    #banner{position:relative;height:480px;overflow:hidden;background:#111}
+    #banner img{width:100%;height:100%;object-fit:cover;object-position:center 33%;display:block;opacity:.72}
     .banner-overlay{position:absolute;inset:0;background:linear-gradient(to right,rgba(0,0,0,.82) 0%,rgba(0,0,0,.08) 60%);display:flex;align-items:flex-end;padding:52px 80px}
     .banner-overlay h2{font-size:56px;font-weight:800;color:var(--white);line-height:1.05;margin-bottom:28px}
 
@@ -213,6 +211,21 @@
     .footer-bottom-links a:hover,.footer-bottom-links button:hover{color:#fff}
     .footer-copy{font-size:12px;color:#555}
 
+    /* MOBILE CTA — hidden on desktop */
+    .hero-cta-mobile{display:none}
+
+    /* QUOTE MODAL */
+    #quote-modal{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:24px}
+    #quote-modal.open{display:flex}
+    .qm-box{background:#fff;border-radius:14px;max-width:480px;width:100%;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.3)}
+    .qm-head{display:flex;align-items:center;justify-content:space-between;padding:22px 28px;border-bottom:1px solid #eee;flex-shrink:0}
+    .qm-head h2{font-size:17px;font-weight:700;color:#111;margin:0}
+    .qm-close{width:32px;height:32px;border-radius:7px;background:#f0f0f0;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:16px;transition:background .15s}
+    .qm-close:hover{background:#ddd}
+    .qm-close svg{width:14px;height:14px;stroke:#555;fill:none;stroke-width:2.5;stroke-linecap:round}
+    .qm-body{overflow-y:auto;padding:24px 28px;flex:1}
+    .qm-body .form-row{flex-direction:column}
+
     /* PRIVACY MODAL */
     #privacy-modal{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:24px}
     #privacy-modal.open{display:flex}
@@ -237,8 +250,10 @@
       html{overflow-x:hidden}
       body{overflow-x:hidden;width:100%;max-width:100vw}
       .container,.nav-inner{padding:0 20px}
-      .hero-grid{flex-direction:column;padding:32px 20px 40px;gap:32px}
+      .hero-grid{flex-direction:column-reverse;padding:32px 20px 40px;gap:32px}
       .hero-left{flex:unset;width:100%}
+      #quoteForm{display:none}
+      .hero-cta-mobile{display:flex}
       .hero-right{flex:unset;width:100%;min-height:unset;border-radius:16px}
       .hero-right img{width:100%;height:auto;max-height:320px;object-fit:cover}
       .how-inner,.pricing-inner{flex-direction:column;gap:32px}
@@ -284,6 +299,9 @@ gtag('config','G-3Q5B4KW6GJ');
 gtag('config','AW-17992633059');
 </script>
 <!-- End Google Tag -->
+<!-- Start of HubSpot Embed Code -->
+<script type="text/javascript" id="hs-script-loader" async defer src="//js.hs-scripts.com/51050294.js"></script>
+<!-- End of HubSpot Embed Code -->
 </head>
 <body>
 
@@ -299,7 +317,7 @@ gtag('config','AW-17992633059');
       <button class="nav-toggle" aria-label="Menu" onclick="document.querySelector('#nav .nav-links').classList.toggle('open')">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#222" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
-      <a href="#hero" class="nav-cta" style="text-decoration:none">Get a Quote</a>
+      <a href="#hero" class="nav-cta" style="text-decoration:none" onclick="if(window.innerWidth<=1024){event.preventDefault();document.getElementById('quote-modal').classList.add('open');document.querySelector('#nav .nav-links').classList.remove('open');}">Get a Quote</a>
     </div>
   </div>
 </header>
@@ -311,12 +329,12 @@ gtag('config','AW-17992633059');
   <div class="hero-grid">
 
     <div class="hero-left">
-      <h1 id="hero-heading">Rent a Portable Sign in Dallas Fort Worth, Texas</h1>
+      <h1 id="hero-heading">Rent a Portable Sign in Dallas–Fort Worth</h1>
       <p>A fully managed end-to-end solution that will get your business noticed.</p>
+      <div class="hero-cta-mobile">
+        <button class="btn btn-yellow" style="width:100%;padding:15px;font-size:15px;font-weight:700;border-radius:8px" onclick="document.getElementById('quote-modal').classList.add('open')">Request a Quote</button>
+      </div>
       <form id="quoteForm" onsubmit="return submitQuote(this);" aria-label="Request a quote">
-        <input type="hidden" name="access_key" value="fe2deaad-90b4-4bf1-8781-9017dccdfb78"/>
-        <input type="hidden" name="subject" value="Quote Request - Curbex Website"/>
-        <input type="hidden" name="from_name" value="Curbex Quote Form"/>
         <div class="form-row">
           <div class="form-group">
             <label for="name">Name <span class="req">*</span></label>
@@ -329,12 +347,9 @@ gtag('config','AW-17992633059');
         </div>
         <div class="form-group full">
           <label for="address">Street Address <span class="req">*</span></label>
-          <input type="text" id="address" name="address" placeholder="123 Main St, Dallas, TX" required/>
+          <input type="text" id="address" name="address" placeholder="123 Main St, Dallas, TX" autocomplete="off" required/>
         </div>
-        <div class="form-group full">
-          <label for="business">Business Name <span class="req">*</span></label>
-          <input type="text" id="business" name="business_name" placeholder="Acme Corp" required/>
-        </div>
+
         <div class="form-group full">
           <label for="email">Email <span class="req">*</span></label>
           <input type="email" id="email" name="email" placeholder="you@company.com" required/>
@@ -350,11 +365,48 @@ gtag('config','AW-17992633059');
     <div class="hero-right">
       <img src="images/hp-hero.png"
            alt="Curbex portable sign beside a Dallas road"
-           width="467" height="700"/>
+           width="2028" height="1170"/>
     </div>
 
   </div>
 </section>
+
+<!-- QUOTE MODAL (mobile) -->
+<div id="quote-modal" role="dialog" aria-modal="true" aria-labelledby="qm-title" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="qm-box">
+    <div class="qm-head">
+      <h2 id="qm-title">Request a Quote</h2>
+      <button class="qm-close" onclick="document.getElementById('quote-modal').classList.remove('open')" aria-label="Close"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="qm-body">
+      <form id="quoteFormModal" onsubmit="return submitQuote(this);" aria-label="Request a quote">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="m-name">Name <span class="req">*</span></label>
+            <input type="text" id="m-name" name="name" placeholder="Tyler Cooper" required/>
+          </div>
+          <div class="form-group">
+            <label for="m-phone">Phone <span class="req">*</span></label>
+            <input type="tel" id="m-phone" name="phone" placeholder="(555) 000-0000" required/>
+          </div>
+        </div>
+        <div class="form-group full">
+          <label for="m-address">Street Address <span class="req">*</span></label>
+          <input type="text" id="m-address" name="address" placeholder="123 Main St, Dallas, TX" autocomplete="off" required/>
+        </div>
+        <div class="form-group full">
+          <label for="m-email">Email <span class="req">*</span></label>
+          <input type="email" id="m-email" name="email" placeholder="you@company.com" required/>
+        </div>
+        <label style="display:flex;align-items:flex-start;gap:8px;margin-top:12px;cursor:pointer;">
+          <input type="checkbox" name="sms_consent" value="yes" required style="margin-top:3px;flex-shrink:0;"/>
+          <span style="font-size:0.68rem;color:#888;line-height:1.4;">I agree to receive text messages from Curbex USA. Message frequency varies. Msg &amp; data rates may apply. Reply STOP to opt out, HELP for help. View our <a href="#" onclick="event.preventDefault();document.getElementById('privacy-modal').classList.add('open');" style="color:#888;text-decoration:underline;">Privacy Policy</a>.</span>
+        </label>
+        <button type="submit" class="btn btn-yellow form-submit" style="width:100%;padding:13px;font-size:14px;font-weight:700;border-radius:8px;margin-top:14px">Request a Quote</button>
+      </form>
+    </div>
+  </div>
+</div>
 
 <section id="features" aria-label="Key service features">
   <div class="container features-inner">
@@ -422,7 +474,7 @@ gtag('config','AW-17992633059');
 <section id="usecases" class="section" style="padding-top:20px" aria-labelledby="usecases-heading">
   <div class="container">
     <span class="label">Use Cases</span>
-    <h2 id="usecases-heading" class="heading">Built for Dallas Fort Worth businesses</h2>
+    <h2 id="usecases-heading" class="heading">Built for Dallas–Fort Worth businesses</h2>
     <p class="subtext" style="margin-bottom:36px">Perfect for short bursts or always-on visibility. Update your message as your needs change.</p>
     <div class="usecases-grid">
       <article class="usecase-card"><div class="usecase-text"><h3 class="usecase-title">Grand openings</h3><p class="usecase-desc">Drive first-week traffic and make your opening impossible to miss.</p></div><svg class="usecase-icon" viewBox="0 0 52 52" fill="none" aria-hidden="true"><rect width="52" height="52" rx="8" fill="#F5F5F5"/><path d="M18 34V24l8-6 8 6v10" stroke="#888" stroke-width="1.5" stroke-linejoin="round"/><rect x="22" y="27" width="8" height="7" rx="1" stroke="#888" stroke-width="1.5"/><path d="M16 24h20" stroke="#888" stroke-width="1.5" stroke-linecap="round"/></svg></article>
@@ -526,7 +578,7 @@ gtag('config','AW-17992633059');
           <div><span class="faq-q">Where can the sign be placed?</span></div>
           <span class="faq-chevron" aria-hidden="true"><svg width="14" height="8" viewBox="0 0 14 8" fill="none"><path d="M1 1l6 6 6-6" stroke="#949494" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
         </summary>
-        <p class="faq-answer">Signs can be placed at permitted roadside locations with high visibility across the Dallas Fort Worth metro area.</p>
+        <p class="faq-answer">Signs can be placed at permitted roadside locations with high visibility across the Dallas–Fort Worth metro area.</p>
       </details>
       <details class="faq-item">
         <summary class="faq-trigger">
@@ -568,16 +620,16 @@ gtag('config','AW-17992633059');
       <div>
         <a href="/" class="footer-logo"><img src="data:image/png;base64,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" alt="Curbex" style="height:36px;width:auto;filter:invert(1);display:block;"/></a>
         <div class="socials">
-          <a href="https://facebook.com/curbex" class="social-icon" aria-label="Facebook" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></a>
-          <a href="https://instagram.com/curbex" class="social-icon" aria-label="Instagram" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="white" stroke="none"/></svg></a>
-          <a href="https://twitter.com/curbex" class="social-icon" aria-label="Twitter" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg></a>
-          <a href="https://linkedin.com/company/curbex" class="social-icon" aria-label="LinkedIn" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg></a>
+          <a href="https://www.facebook.com/profile.php?id=61580995854042" class="social-icon" aria-label="Facebook" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></a>
+          <a href="https://www.instagram.com/curbex_us/" class="social-icon" aria-label="Instagram" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="white" stroke="none"/></svg></a>
+          <a href="https://x.com/curbex_usa" class="social-icon" aria-label="Twitter" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg></a>
+          <a href="https://www.linkedin.com/company/curbex-us" class="social-icon" aria-label="LinkedIn" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg></a>
         </div>
       </div>
       <div class="footer-newsletter">
         <p class="footer-newsletter-title">Join Our Newsletter</p>
         <p class="footer-newsletter-sub">Be the first to know about our latest updates, exclusive offers, and more.</p>
-        <form class="newsletter-row" action="/newsletter" method="POST">
+        <form class="newsletter-row" onsubmit="return submitNewsletter(this);">
           <input type="email" name="email" placeholder="Enter your email" required aria-label="Email for newsletter"/>
           <button type="submit">Subscribe</button>
         </form>
@@ -599,9 +651,9 @@ gtag('config','AW-17992633059');
       <div class="footer-col">
         <p class="footer-col-title">Contact Us</p>
         <div class="footer-links">
-          <p>Phone: <a href="#">[Phone number coming soon]</a></p>
-          <p>Address: Dallas Fort Worth, TX</p>
-          <p>Email: [email coming soon]</p>
+          <p>Phone: <a href="tel:8175872570">(817) 587-2570</a></p>
+          <p>Address: 5045 Saunders Road, Suite 161, Fort Worth, TX 76119</p>
+          <p>Email: <a href="mailto:signs@curbexusa.com">signs@curbexusa.com</a></p>
         </div>
       </div>
     </div>
@@ -621,12 +673,12 @@ gtag('config','AW-17992633059');
     <div class="prv-head">
       <div>
         <h2 id="prv-title">Privacy Policy</h2>
-        <p>Last updated: January 1, 2026 &nbsp;·&nbsp; Curbex – Dallas Fort Worth, TX</p>
+        <p>Last updated: January 1, 2026 &nbsp;·&nbsp; Curbex – Dallas–Fort Worth, TX</p>
       </div>
       <button class="prv-close" onclick="document.getElementById('privacy-modal').classList.remove('open')" aria-label="Close"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="prv-body">
-      <p>Curbex ("we," "us," or "our") operates a portable sign rental service in the Dallas Fort Worth metro area. This policy describes how we collect, use, and protect your personal information when you visit our website or use our services.</p>
+      <p>Curbex ("we," "us," or "our") operates a portable sign rental service in the Dallas–Fort Worth metro area. This policy describes how we collect, use, and protect your personal information when you visit our website or use our services.</p>
       <h3>1. Information We Collect</h3>
       <ul>
         <li><strong>Contact details</strong> – name, email, phone number, and business address when requesting a quote or placing an order.</li>
@@ -662,9 +714,9 @@ gtag('config','AW-17992633059');
       </div>
       <h3>11. Contact Us</h3>
       <ul>
-        <li>Email: [email coming soon]</li>
-        <li>Phone: [Phone number coming soon]</li>
-        <li>Location: Dallas Fort Worth, TX</li>
+        <li>Email: <a href="mailto:signs@curbexusa.com" style="color:#FFA900">signs@curbexusa.com</a></li>
+        <li>Phone: <a href="tel:8175872570" style="color:#FFA900">(817) 587-2570</a></li>
+        <li>Location: 5045 Saunders Road, Suite 161, Fort Worth, TX 76119</li>
       </ul>
     </div>
     <div class="prv-foot">
@@ -679,22 +731,57 @@ function submitQuote(form) {
   var origText = btn.textContent;
   btn.textContent = 'Sending...';
   btn.disabled = true;
-  fetch('https://api.web3forms.com/submit', {
+  var fd = Object.fromEntries(new FormData(form));
+  var nameParts = (fd.name || '').trim().split(/\s+/);
+  var firstName = nameParts[0] || '';
+  var lastName = nameParts.slice(1).join(' ') || '';
+  fetch('https://api.hsforms.com/submissions/v3/integration/submit/51050294/737522aa-e3bc-44bb-bf5f-f1c62c364d18', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(Object.fromEntries(new FormData(form)))
+    body: JSON.stringify({
+      fields: [
+        { name: 'firstname', value: firstName },
+        { name: 'lastname', value: lastName },
+        { name: 'phone', value: fd.phone || '' },
+        { name: 'email', value: fd.email || '' },
+        { name: 'address', value: fd.address || '' }
+      ],
+      context: {
+        pageUri: window.location.href,
+        pageName: document.title
+      }
+    })
   })
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
-    if (data.success) {
-      if(typeof fbq==='function') fbq('track','Lead');
-      if(typeof gtag==='function') gtag('event','conversion',{'send_to':'AW-17992633059/4jc9CIfDxoUcEOOVx4ND','value':1.0,'currency':'USD','transport_type':'beacon','event_callback':function(){console.log('Google Ads conversion sent');}});
-      setTimeout(function(){ form.innerHTML = '<div style="text-align:center;padding:32px 0"><h3 style="color:#22c55e;margin-bottom:8px">Thank you!</h3><p>We\'ll be in touch shortly.</p></div>'; }, 1000);
-    } else {
-      btn.textContent = origText;
-      btn.disabled = false;
-      alert('Something went wrong. Please try again.');
-    }
+  .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then(function() {
+    if(typeof fbq==='function') fbq('track','Lead');
+    if(typeof gtag==='function') gtag('event','conversion',{'send_to':'AW-17992633059/4jc9CIfDxoUcEOOVx4ND','value':1.0,'currency':'USD','transport_type':'beacon','event_callback':function(){console.log('Google Ads conversion sent');}});
+    setTimeout(function(){ form.innerHTML = '<div style="text-align:center;padding:32px 0"><h3 style="color:#22c55e;margin-bottom:8px">Thank you!</h3><p>We\'ll be in touch shortly.</p></div>'; }, 1000);
+  })
+  .catch(function() {
+    btn.textContent = origText;
+    btn.disabled = false;
+    alert('Something went wrong. Please try again.');
+  });
+  return false;
+}
+function submitNewsletter(form) {
+  var btn = form.querySelector('button');
+  var origText = btn.textContent;
+  btn.textContent = 'Sending...';
+  btn.disabled = true;
+  var email = form.querySelector('input[name="email"]').value;
+  fetch('https://api.hsforms.com/submissions/v3/integration/submit/51050294/737522aa-e3bc-44bb-bf5f-f1c62c364d18', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      fields: [{ name: 'email', value: email }],
+      context: { pageUri: window.location.href, pageName: 'Newsletter Signup' }
+    })
+  })
+  .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then(function() {
+    form.innerHTML = '<p style="color:#22c55e;font-size:14px;margin:0">Thanks! You\'re subscribed.</p>';
   })
   .catch(function() {
     btn.textContent = origText;
@@ -738,5 +825,63 @@ function submitQuote(form) {
 })();
 </script>
 <script>if(window.location.hash.match(/invite_token|confirmation_token|recovery_token/)){window.location.href='/admin.html'+window.location.hash;}</script>
+<style>
+.ac-list{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #ddd;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);max-height:220px;overflow-y:auto;z-index:999;margin-top:2px}
+.ac-item{padding:10px 14px;cursor:pointer;font-size:.85rem;color:#333;border-bottom:1px solid #f0f0f0}
+.ac-item:last-child{border-bottom:none}
+.ac-item:hover,.ac-item.ac-active{background:#f5f5f5}
+</style>
+<script>
+(function(){
+  var input=document.querySelector('input[name="address"]');
+  if(!input)return;
+  input.parentElement.style.position='relative';
+  var list=document.createElement('div');
+  list.className='ac-list';
+  list.style.display='none';
+  input.parentElement.appendChild(list);
+  var timer=null,activeIdx=-1;
+  input.addEventListener('input',function(){
+    clearTimeout(timer);
+    var q=input.value.trim();
+    if(q.length<3){list.style.display='none';return;}
+    timer=setTimeout(function(){
+      fetch('https://photon.komoot.io/api/?q='+encodeURIComponent(q)+'&lat=32.78&lon=-96.80&limit=5&lang=en')
+        .then(function(r){return r.json();})
+        .then(function(data){
+          var results=(data.features||[]).filter(function(f){
+            return f.properties.country==='United States'&&f.properties.street;
+          });
+          if(!results.length){list.style.display='none';return;}
+          activeIdx=-1;
+          list.innerHTML=results.map(function(f,i){
+            var p=f.properties;
+            var addr=(p.housenumber?p.housenumber+' ':'')+p.street+', '+(p.city||p.county||'')+', '+(p.state||'')+(p.postcode?' '+p.postcode:'');
+            return '<div class="ac-item" data-idx="'+i+'" data-addr="'+addr.replace(/"/g,'&quot;')+'">'+addr+'</div>';
+          }).join('');
+          list.style.display='block';
+        })
+        .catch(function(){list.style.display='none';});
+    },300);
+  });
+  list.addEventListener('click',function(e){
+    var item=e.target.closest('.ac-item');
+    if(item){input.value=item.getAttribute('data-addr');list.style.display='none';}
+  });
+  input.addEventListener('keydown',function(e){
+    var items=list.querySelectorAll('.ac-item');
+    if(!items.length||list.style.display==='none')return;
+    if(e.key==='ArrowDown'){e.preventDefault();activeIdx=Math.min(activeIdx+1,items.length-1);}
+    else if(e.key==='ArrowUp'){e.preventDefault();activeIdx=Math.max(activeIdx-1,0);}
+    else if(e.key==='Enter'&&activeIdx>=0){e.preventDefault();input.value=items[activeIdx].getAttribute('data-addr');list.style.display='none';return;}
+    else if(e.key==='Escape'){list.style.display='none';return;}
+    else return;
+    items.forEach(function(it,i){it.classList.toggle('ac-active',i===activeIdx);});
+  });
+  document.addEventListener('click',function(e){
+    if(!input.contains(e.target)&&!list.contains(e.target))list.style.display='none';
+  });
+})();
+</script>
 </body>
 </html>
