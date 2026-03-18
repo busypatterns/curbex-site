@@ -345,23 +345,28 @@ gtag('config','AW-17992633059');
       <form id="quoteForm" onsubmit="return submitQuote(this);" aria-label="Request a quote">
         <div class="form-row">
           <div class="form-group">
-            <label for="name">Name <span class="req">*</span></label>
-            <input type="text" id="name" name="name" placeholder="Tyler Cooper" required/>
+            <label for="firstname">First Name <span class="req">*</span></label>
+            <input type="text" id="firstname" name="firstname" placeholder="Tyler" required/>
           </div>
+          <div class="form-group">
+            <label for="lastname">Last Name <span class="req">*</span></label>
+            <input type="text" id="lastname" name="lastname" placeholder="Cooper" required/>
+          </div>
+        </div>
+        <div class="form-row">
           <div class="form-group">
             <label for="phone">Phone <span class="req">*</span></label>
             <input type="tel" id="phone" name="phone" placeholder="(555) 000-0000" required/>
+          </div>
+          <div class="form-group">
+            <label for="email">Email <span class="req">*</span></label>
+            <input type="email" id="email" name="email" placeholder="you@company.com" required/>
           </div>
         </div>
         <div class="form-group full addr-wrap">
           <label for="address">Street Address <span class="req">*</span></label>
           <input type="text" id="address" name="address" placeholder="123 Main St, Dallas, TX" autocomplete="off" required/>
           <div class="addr-list" id="addr-list-desktop"></div>
-        </div>
-
-        <div class="form-group full">
-          <label for="email">Email <span class="req">*</span></label>
-          <input type="email" id="email" name="email" placeholder="you@company.com" required/>
         </div>
         <label style="display:flex;align-items:flex-start;gap:8px;margin-top:12px;cursor:pointer;">
           <input type="checkbox" name="sms_consent" value="yes" required style="margin-top:3px;flex-shrink:0;"/>
@@ -391,22 +396,28 @@ gtag('config','AW-17992633059');
       <form id="quoteFormModal" onsubmit="return submitQuote(this);" aria-label="Request a quote">
         <div class="form-row">
           <div class="form-group">
-            <label for="m-name">Name <span class="req">*</span></label>
-            <input type="text" id="m-name" name="name" placeholder="Tyler Cooper" required/>
+            <label for="m-firstname">First Name <span class="req">*</span></label>
+            <input type="text" id="m-firstname" name="firstname" placeholder="Tyler" required/>
           </div>
+          <div class="form-group">
+            <label for="m-lastname">Last Name <span class="req">*</span></label>
+            <input type="text" id="m-lastname" name="lastname" placeholder="Cooper" required/>
+          </div>
+        </div>
+        <div class="form-row">
           <div class="form-group">
             <label for="m-phone">Phone <span class="req">*</span></label>
             <input type="tel" id="m-phone" name="phone" placeholder="(555) 000-0000" required/>
+          </div>
+          <div class="form-group">
+            <label for="m-email">Email <span class="req">*</span></label>
+            <input type="email" id="m-email" name="email" placeholder="you@company.com" required/>
           </div>
         </div>
         <div class="form-group full addr-wrap">
           <label for="m-address">Street Address <span class="req">*</span></label>
           <input type="text" id="m-address" name="address" placeholder="123 Main St, Dallas, TX" autocomplete="off" required/>
           <div class="addr-list" id="addr-list-modal"></div>
-        </div>
-        <div class="form-group full">
-          <label for="m-email">Email <span class="req">*</span></label>
-          <input type="email" id="m-email" name="email" placeholder="you@company.com" required/>
         </div>
         <label style="display:flex;align-items:flex-start;gap:8px;margin-top:12px;cursor:pointer;">
           <input type="checkbox" name="sms_consent" value="yes" required style="margin-top:3px;flex-shrink:0;"/>
@@ -795,16 +806,13 @@ function submitQuote(form) {
   btn.textContent = 'Sending...';
   btn.disabled = true;
   var fd = Object.fromEntries(new FormData(form));
-  var nameParts = (fd.name || '').trim().split(/\s+/);
-  var firstName = nameParts[0] || '';
-  var lastName = nameParts.slice(1).join(' ') || '';
   fetch('https://api.hsforms.com/submissions/v3/integration/submit/51050294/737522aa-e3bc-44bb-bf5f-f1c62c364d18', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       fields: [
-        { name: 'firstname', value: firstName },
-        { name: 'lastname', value: lastName },
+        { name: 'firstname', value: fd.firstname || '' },
+        { name: 'lastname', value: fd.lastname || '' },
         { name: 'phone', value: fd.phone || '' },
         { name: 'email', value: fd.email || '' },
         { name: 'address', value: fd.address || '' }
