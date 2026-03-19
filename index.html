@@ -310,6 +310,25 @@ gtag('config','AW-17992633059');
 <!-- Start of HubSpot Embed Code -->
 <script type="text/javascript" id="hs-script-loader" async defer src="//js.hs-scripts.com/51050294.js"></script>
 <!-- End of HubSpot Embed Code -->
+<!-- Start PostalAdmin QR Tracking -->
+<script type="text/javascript">
+var a;
+var rc = new RegExp('_bn_d=([^;]+)');
+var rq = new RegExp('_bn_d=([^&#]*)', 'i');
+var aq = rq.exec(window.location.href);
+if (aq != null) a=aq;
+else var ac = rc.exec(document.cookie);
+if (ac != null) a=ac;
+if (a != null) {
+  var _bn_d = a[1];
+  (function() {
+    var pl = document.createElement('script'); pl.type = 'text/javascript'; pl.async = true;
+    pl.src = ('https:' == document.location.protocol ? 'https://app' : 'http://app') + '.postaladmin.com/plDataEmbed.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(pl, s);
+  })();
+}
+</script>
+<!-- End PostalAdmin QR Tracking -->
 </head>
 <body>
 
