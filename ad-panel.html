@@ -539,23 +539,42 @@ if (a != null) {
 </div>
 
 <script>
+  // Capture UTM params and store in sessionStorage
+  (function() {
+    var params = new URLSearchParams(window.location.search);
+    var utmKeys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
+    utmKeys.forEach(function(key) {
+      var val = params.get(key);
+      if (val) sessionStorage.setItem(key, val);
+    });
+  })();
+  function getUtmFields() {
+    var utmKeys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
+    var fields = [];
+    utmKeys.forEach(function(key) {
+      var val = sessionStorage.getItem(key);
+      if (val) fields.push({ name: key, value: val });
+    });
+    return fields;
+  }
   function submitQuote(form) {
     var btn = form.querySelector('.form-submit') || form.querySelector('.btn-quote');
     var origText = btn.textContent;
     btn.textContent = 'Sending...';
     btn.disabled = true;
     var fd = Object.fromEntries(new FormData(form));
+    var fields = [
+      { name: 'firstname', value: fd.firstname || '' },
+      { name: 'lastname', value: fd.lastname || '' },
+      { name: 'phone', value: fd.phone || '' },
+      { name: 'email', value: fd.email || '' },
+      { name: 'address', value: fd.address || '' }
+    ].concat(getUtmFields());
     fetch('https://api.hsforms.com/submissions/v3/integration/submit/51050294/737522aa-e3bc-44bb-bf5f-f1c62c364d18', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        fields: [
-          { name: 'firstname', value: fd.firstname || '' },
-          { name: 'lastname', value: fd.lastname || '' },
-          { name: 'phone', value: fd.phone || '' },
-          { name: 'email', value: fd.email || '' },
-          { name: 'address', value: fd.address || '' }
-        ],
+        fields: fields,
         context: {
           pageUri: window.location.href,
           pageName: document.title
