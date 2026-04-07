@@ -568,6 +568,7 @@ if (a != null) {
       body: JSON.stringify({
         fields: fields,
         context: {
+          hutk: document.cookie.match(/hubspotutk=([^;]*)/)?.[1] || undefined,
           pageUri: window.location.href,
           pageName: document.title
         }
@@ -597,7 +598,7 @@ if (a != null) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         fields: [{ name: 'email', value: email }],
-        context: { pageUri: window.location.href, pageName: 'Newsletter Signup' }
+        context: { hutk: document.cookie.match(/hubspotutk=([^;]*)/)?.[1] || undefined, pageUri: window.location.href, pageName: 'Newsletter Signup' }
       })
     })
     .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
