@@ -776,12 +776,14 @@ if (a != null) {
     var list=document.getElementById(listId);
     if(!input||!list)return;
     var timer;
+    var justSelected=false;
     input.addEventListener('input',function(){
       clearTimeout(timer);
+      if(justSelected){justSelected=false;return;}
       var q=input.value.trim();
       if(q.length<3){list.innerHTML='';list.classList.remove('show');return;}
       timer=setTimeout(function(){
-        fetch('https://photon.komoot.io/api/?q='+encodeURIComponent(q)+'&limit=5&lang=en&lat=32.78&lon=-96.80&osm_tag=place&osm_tag=highway&layer=house&layer=street')
+        fetch('https://photon.komoot.io/api/?q='+encodeURIComponent(q)+'&limit=5&lang=en&lat=32.78&lon=-96.80&bbox=-97.8,32.4,-96.2,33.4&layer=house&layer=street')
         .then(function(r){return r.json();})
         .then(function(data){
           list.innerHTML='';
@@ -799,7 +801,9 @@ if (a != null) {
             var div=document.createElement('div');
             div.className='addr-item';
             div.textContent=parts.join(', ');
+            div.addEventListener('mousedown',function(e){e.preventDefault();});
             div.addEventListener('click',function(){
+              justSelected=true;
               input.value=parts.join(', ');
               list.innerHTML='';
               list.classList.remove('show');
@@ -957,7 +961,7 @@ function submitNewsletter(form) {
     var q=input.value.trim();
     if(q.length<3){list.style.display='none';return;}
     timer=setTimeout(function(){
-      fetch('https://photon.komoot.io/api/?q='+encodeURIComponent(q)+'&lat=32.78&lon=-96.80&limit=5&lang=en')
+      fetch('https://photon.komoot.io/api/?q='+encodeURIComponent(q)+'&lat=32.78&lon=-96.80&limit=5&lang=en&bbox=-97.8,32.4,-96.2,33.4&layer=house&layer=street')
         .then(function(r){return r.json();})
         .then(function(data){
           var results=(data.features||[]).filter(function(f){

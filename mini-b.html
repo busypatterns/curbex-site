@@ -647,12 +647,14 @@ if (a != null) {
   list.style.display='none';
   input.parentElement.appendChild(list);
   var timer=null,activeIdx=-1;
+  var justSelected=false;
   input.addEventListener('input',function(){
     clearTimeout(timer);
+    if(justSelected){justSelected=false;return;}
     var q=input.value.trim();
     if(q.length<3){list.style.display='none';return;}
     timer=setTimeout(function(){
-      fetch('https://photon.komoot.io/api/?q='+encodeURIComponent(q)+'&lat=32.78&lon=-96.80&limit=5&lang=en')
+      fetch('https://photon.komoot.io/api/?q='+encodeURIComponent(q)+'&lat=32.78&lon=-96.80&limit=5&lang=en&bbox=-97.8,32.4,-96.2,33.4&layer=house&layer=street')
         .then(function(r){return r.json();})
         .then(function(data){
           var results=(data.features||[]).filter(function(f){
@@ -670,9 +672,10 @@ if (a != null) {
         .catch(function(){list.style.display='none';});
     },300);
   });
+  list.addEventListener('mousedown',function(e){e.preventDefault();});
   list.addEventListener('click',function(e){
     var item=e.target.closest('.ac-item');
-    if(item){input.value=item.getAttribute('data-addr');list.style.display='none';}
+    if(item){justSelected=true;input.value=item.getAttribute('data-addr');list.style.display='none';}
   });
   input.addEventListener('keydown',function(e){
     var items=list.querySelectorAll('.ac-item');
