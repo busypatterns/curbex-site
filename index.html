@@ -363,7 +363,7 @@ if (a != null) {
       <div class="hero-cta-mobile">
         <button class="btn btn-yellow" style="width:100%;padding:15px;font-size:15px;font-weight:700;border-radius:8px" onclick="document.getElementById('quote-modal').classList.add('open')">Request a Quote</button>
       </div>
-      <form id="quoteForm" onsubmit="return submitQuote(this);" aria-label="Request a quote">
+      <form id="quoteForm" data-hs-do-not-collect="true" onsubmit="return submitQuote(this);" aria-label="Request a quote">
         <div class="form-row">
           <div class="form-group">
             <label for="firstname">First Name <span class="req">*</span></label>
@@ -414,7 +414,7 @@ if (a != null) {
       <button class="qm-close" onclick="document.getElementById('quote-modal').classList.remove('open')" aria-label="Close"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="qm-body">
-      <form id="quoteFormModal" onsubmit="return submitQuote(this);" aria-label="Request a quote">
+      <form id="quoteFormModal" data-hs-do-not-collect="true" onsubmit="return submitQuote(this);" aria-label="Request a quote">
         <div class="form-row">
           <div class="form-group">
             <label for="m-firstname">First Name <span class="req">*</span></label>
@@ -671,7 +671,7 @@ if (a != null) {
       <div class="footer-newsletter">
         <p class="footer-newsletter-title">Join Our Newsletter</p>
         <p class="footer-newsletter-sub">Be the first to know about our latest updates, exclusive offers, and more.</p>
-        <form class="newsletter-row" onsubmit="return submitNewsletter(this);">
+        <form class="newsletter-row" data-hs-do-not-collect="true" onsubmit="return submitNewsletter(this);">
           <input type="email" name="email" placeholder="Enter your email" required aria-label="Email for newsletter"/>
           <button type="submit">Subscribe</button>
         </form>
