@@ -737,6 +737,7 @@ document.ondrop = function(e) {
     if (t === 'hp') handleHpImgFile(el.getAttribute('data-slot-id'), file);
     else if (t === 'carousel') handleCarouselImgFile(el.getAttribute('data-pid'), file);
     else if (t === 'product') handleImgFile(el.getAttribute('data-pid'), parseInt(el.getAttribute('data-idx')), file);
+    else if (t === 'strip') handleStripImgFile(el.getAttribute('data-pid'), parseInt(el.getAttribute('data-idx')), file);
     else toast('Unknown slot type: ' + t, 'err');
   } catch(err) {
     toast('Drop error: ' + err.message, 'err');
@@ -1530,6 +1531,9 @@ function renderStripImages(pid) {
   imgs.forEach((src, i) => {
     const slot = document.createElement('div');
     slot.className = 'img-slot' + (src ? ' filled' : '');
+    slot.setAttribute('data-drop-type', 'strip');
+    slot.setAttribute('data-pid', pid);
+    slot.setAttribute('data-idx', i);
     slot.style.cssText = 'aspect-ratio:1;border-radius:8px;cursor:pointer;overflow:hidden;position:relative;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;flex-direction:column';
     if (src) {
       slot.style.borderStyle = 'solid';
@@ -1558,8 +1562,13 @@ async function handleStripImgFile(pid, idx, file) {
     if (!state[pid]) state[pid] = {};
     if (!state[pid].stripImages) state[pid].stripImages = ['','','','',''];
     state[pid].stripImages[idx] = path;
+    // Sync strip images across all product pages
+    PRODUCTS.forEach(p => {
+      if (!state[p.id]) state[p.id] = {};
+      state[p.id].stripImages = [...state[pid].stripImages];
+      renderStripImages(p.id);
+    });
     saveState();
-    renderStripImages(pid);
     toast('Photo uploaded ✓', 'ok');
   } catch(e) {
     console.error('[handleStripImgFile]', e);
