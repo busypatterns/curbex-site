@@ -251,7 +251,7 @@
     <!-- DASHBOARD -->
     <div class="panel on" id="p-dash">
       <div class="dash-grid">
-        <div class="dash-card" onclick="go('mini-b')"><div class="dash-em">📋</div><div class="dash-name">Mini B</div><div class="dash-type">Portable sign</div></div>
+        <div class="dash-card" onclick="go('mini-b')"><div class="dash-em">📋</div><div class="dash-name">Mini B</div><div class="dash-type">Sign</div></div>
         <div class="dash-card" onclick="go('pedestal')"><div class="dash-em">🏛️</div><div class="dash-name">Pedestal</div><div class="dash-type">Self-weighted</div></div>
         <div class="dash-card" onclick="go('4x4')"><div class="dash-em">⬛</div><div class="dash-name">4×4</div><div class="dash-type">Compact sign</div></div>
         <div class="dash-card" onclick="go('ad-panel')"><div class="dash-em">📢</div><div class="dash-name">Ad Panel</div><div class="dash-type">Pylon sign</div></div>
@@ -755,9 +755,9 @@ const PRODUCTS = [
 ];
 
 const DEFAULTS = {
-  'mini-b':   { title:'Mini B', subtitle:'Printed Portable Sign', price:'Affordable Rental Rate — as Low as $10/day', desc:'The Mini B is a portable billboard-style sign designed for maximum roadside visibility...' },
-  'pedestal': { title:'Pedestal', subtitle:'Self-Weighted Portable Sign', price:'Affordable Rental Rate — as Low as $10/day', desc:'The Pedestal is a sleek, self-weighted portable sign built for high-traffic roadside placement...' },
-  '4x4':      { title:'4×4', subtitle:'Printed Portable Sign', price:'Affordable Rental Rate — as Low as $10/day', desc:'The 4×4 is a compact, double-sided sign perfect for tight spaces...' },
+  'mini-b':   { title:'Mini B', subtitle:'Printed Sign', price:'Affordable Rental Rate — as Low as $10/day', desc:'The Mini B is a billboard-style sign designed for maximum roadside visibility...' },
+  'pedestal': { title:'Pedestal', subtitle:'Self-Weighted Sign', price:'Affordable Rental Rate — as Low as $10/day', desc:'The Pedestal is a sleek, self-weighted sign built for high-traffic roadside placement...' },
+  '4x4':      { title:'4×4', subtitle:'Printed Sign', price:'Affordable Rental Rate — as Low as $10/day', desc:'The 4×4 is a compact, double-sided sign perfect for tight spaces...' },
   'ad-panel': { title:'Ad Panel', subtitle:'Semi-Permanent Pylon Sign', price:'Affordable Rental Rate — as Low as $10/day', desc:'The Ad Panel is a high-impact pylon-mounted sign...' },
   'cube-pod': { title:'Cube Pod', subtitle:'Self-Weighted Rental Sign', price:'Affordable Rental Rate — as Low as $10/day', desc:'The Cube Pod is a self-weighted, freestanding sign designed for quick deployment...' }
 };
@@ -1371,7 +1371,7 @@ function buildPanel(prod) {
           <div class="field">
             <div class="fl">Subtitle</div>
             <input type="text" id="${prod.id}-subtitle" value="${esc(s.subtitle||'')}" oninput="upd('${prod.id}','subtitle',this.value)" placeholder="${esc(DEFAULTS[prod.id]?.subtitle || '')}"/>
-            <div class="sub">→ Small text directly below the title (e.g. <em>"Printed Portable Sign"</em>)</div>
+            <div class="sub">→ Small text directly below the title (e.g. <em>"Printed Sign"</em>)</div>
           </div>
         </div>
         <div class="field">
