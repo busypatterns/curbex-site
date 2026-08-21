@@ -211,6 +211,11 @@
       .footer-cols { grid-template-columns: 1fr; gap: 24px; }
       .footer-bottom { flex-direction: column; gap: 12px; text-align: center; }
     }
+
+    .field-hint{display:block;font-size:11px;color:#8A8A8A;line-height:1.45;margin-top:5px}
+    .addr-confirm{display:flex;align-items:flex-start;gap:8px;margin-top:12px;cursor:pointer;font-weight:400}
+    .addr-confirm input[type="checkbox"]{width:auto;min-width:0;margin:3px 0 0;padding:0;flex-shrink:0}
+    .addr-confirm span{font-size:0.68rem;font-weight:400;color:#888;line-height:1.4}
   </style>
 <!-- Meta Pixel -->
 <script>
@@ -314,7 +319,7 @@ if (a != null) {
         <div class="form-group"><label>Last Name<span class="req">*</span></label><input type="text" name="lastname" placeholder="Smith" required/></div>
         <div class="form-group"><label>Phone<span class="req">*</span></label><input type="tel" name="phone" placeholder="(555) 000-0000" required/></div>
         <div class="form-group"><label>Email<span class="req">*</span></label><input type="email" name="email" placeholder="john@company.com" required/></div>
-        <div class="form-group"><label>Street Address<span class="req">*</span></label><input type="text" name="address" placeholder="123 Main St, Dallas, TX" autocomplete="off" required/></div>
+        <div class="form-group"><label>Company Name</label><input type="text" name="company" placeholder="Acme Signs Inc." autocomplete="organization"/></div><div class="form-group"><label>Sign Location<span class="req">*</span></label><input type="text" name="address" placeholder="123 Main St, Dallas, TX" autocomplete="off" required/><span class="field-hint">Where the sign will go. Business or commercial address, not a home.</span></div><label class="addr-confirm"><input type="checkbox" name="commercial_confirmed" value="Yes"/><span>This is a business or commercial location</span></label>
       </div>
       <label style="display:flex;align-items:flex-start;gap:8px;margin-top:12px;cursor:pointer;">
         <input type="checkbox" name="sms_consent" value="yes" required style="margin-top:3px;flex-shrink:0;"/>
@@ -494,18 +499,55 @@ if (a != null) {
     });
     return fields;
   }
+  /* Address parts. Populated from Google Places when a suggestion is picked,
+     cleared when the field is edited so stale parts never get submitted. */
+  function storeAddressParts(input, comps) {
+    var get = function (type, useShort) {
+      for (var i = 0; i < (comps || []).length; i++) {
+        var c = comps[i];
+        if (c.types && c.types.indexOf(type) > -1) return (useShort ? c.shortText : c.longText) || '';
+      }
+      return '';
+    };
+    var num = get('street_number'), route = get('route');
+    input.dataset.street = (num ? num + ' ' : '') + route;
+    input.dataset.city  = get('locality') || get('postal_town') || get('sublocality') || '';
+    input.dataset.state = get('administrative_area_level_1', true);
+    input.dataset.zip   = get('postal_code');
+  }
+  function clearAddressParts(input) {
+    delete input.dataset.street; delete input.dataset.city;
+    delete input.dataset.state;  delete input.dataset.zip;
+  }
+  function splitAddress(input, raw) {
+    if (input && input.dataset && input.dataset.street) {
+      return { street: input.dataset.street, city: input.dataset.city || '',
+               state: input.dataset.state || '', zip: input.dataset.zip || '' };
+    }
+    /* Free-typed fallback: "123 Main St, Dallas, TX 75001" */
+    var m = /^(.*?),\s*([^,]+),\s*([A-Za-z]{2})\b\s*(\d{5})?/.exec(raw || '');
+    if (m) return { street: m[1].trim(), city: m[2].trim(), state: m[3].toUpperCase(), zip: m[4] || '' };
+    return { street: raw || '', city: '', state: '', zip: '' };
+  }
   function submitQuote(form) {
     var btn = form.querySelector('.form-submit') || form.querySelector('.btn-quote');
     var origText = btn.textContent;
     btn.textContent = 'Sending...';
     btn.disabled = true;
     var fd = Object.fromEntries(new FormData(form));
+    var addrInput = form.querySelector('input[name="address"]');
+    var parts = splitAddress(addrInput, fd.address);
     var fields = [
       { name: 'firstname', value: fd.firstname || '' },
       { name: 'lastname', value: fd.lastname || '' },
       { name: 'phone', value: fd.phone || '' },
       { name: 'email', value: fd.email || '' },
-      { name: 'address', value: fd.address || '' }
+      { name: 'company', value: fd.company || '' },
+      { name: 'address', value: parts.street },
+      { name: 'city', value: parts.city },
+      { name: 'state', value: parts.state },
+      { name: 'zip', value: parts.zip },
+      { name: 'commercial_address_confirmed', value: fd.commercial_confirmed ? 'Yes' : 'No' }
     ].concat(getUtmFields());
     fetch('https://api.hsforms.com/submissions/v3/integration/submit/51050294/737522aa-e3bc-44bb-bf5f-f1c62c364d18', {
       method: 'POST',
@@ -599,6 +641,7 @@ if (a != null) {
   var justSelected=false;
   input.addEventListener('input',function(){
     clearTimeout(timer);
+    clearAddressParts(input);
     if(justSelected){justSelected=false;return;}
     var q=input.value.trim();
     if(q.length<3){list.style.display='none';return;}
@@ -628,9 +671,9 @@ if (a != null) {
     list.style.display='none';
     var pid=item.getAttribute('data-pid');
     if(!pid){token=newToken();return;}
-    fetch('https://places.googleapis.com/v1/places/'+pid+'?sessionToken='+token+'&fields=formattedAddress',{headers:{'X-Goog-Api-Key':GKEY}})
+    fetch('https://places.googleapis.com/v1/places/'+pid+'?sessionToken='+token+'&fields=formattedAddress,addressComponents',{headers:{'X-Goog-Api-Key':GKEY}})
       .then(function(r){return r.json();})
-      .then(function(d){if(d&&d.formattedAddress){justSelected=true;input.value=d.formattedAddress;}})
+      .then(function(d){if(d&&d.formattedAddress){justSelected=true;input.value=d.formattedAddress;storeAddressParts(input,d.addressComponents);}})
       .catch(function(){})
       .finally(function(){token=newToken();});
   }
