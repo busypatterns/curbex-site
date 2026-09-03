@@ -859,15 +859,7 @@ function submitQuote(form) {
     { name: 'city', value: parts.city },
     { name: 'state', value: parts.state },
     { name: 'zip', value: parts.zip },
-    { name: 'commercial_address_confirmed', value: fd.commercial_confirmed ? 'Yes' : 'No' },
-    /* Same address written to the associated company record. HubSpot only
-       creates/links a company for business email domains, so these are a
-       no-op for gmail-style addresses. */
-    { objectTypeId: '0-2', name: 'name', value: fd.company || '' },
-    { objectTypeId: '0-2', name: 'address', value: parts.street },
-    { objectTypeId: '0-2', name: 'city', value: parts.city },
-    { objectTypeId: '0-2', name: 'state', value: parts.state },
-    { objectTypeId: '0-2', name: 'zip', value: parts.zip }
+    { name: 'commercial_address_confirmed', value: fd.commercial_confirmed ? 'Yes' : 'No' }
   ].concat(getUtmFields());
   fetch('https://api.hsforms.com/submissions/v3/integration/submit/51050294/737522aa-e3bc-44bb-bf5f-f1c62c364d18', {
     method: 'POST',
